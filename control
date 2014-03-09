@@ -1,0 +1,9 @@
+Package: com.bd452.libpass
+Name: libPassword
+Depends: mobilesubstrate
+Version: 1.1.0
+Architecture: iphoneos-arm
+Description: Library for password tweaks
+Maintainer: bd452
+Author: bd452
+Section: System

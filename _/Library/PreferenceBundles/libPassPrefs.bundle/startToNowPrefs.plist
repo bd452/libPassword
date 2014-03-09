@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.maxkatzmann.starttonow</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>Enable</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Explanation</string>
+			<key>footerText</key>
+			<string>This tweak will bypass the original screen you see when opening the Google Search app and enter Google Now right away. It won&apos;t launch right to Now, if you have a search active or one of the services inside the app is launched.
+
+No respring required.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string></string>
+			<key>footerText</key>
+			<string>©2013 Max Katzmann</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>StartToNow</string>
+</dict>
+</plist>

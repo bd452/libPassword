@@ -1,0 +1,5 @@
+@implementation libPas
+
+<#methods#>
+
+@end
