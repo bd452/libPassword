@@ -35,8 +35,30 @@
 			<string>Done</string>
 			<key>defaults</key>
 			<string>com.bd452.libPass</string>
-			<key>footerText</key>
-			<string>Respring after you make any changes</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+		</dict>
+		<!--
+		<dict>
+			<key>key</key>
+			<string>unsecureMode</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Unsecure Mode</string>
+			<key>set</key>
+			<string>unsecureVerify</string>
+			<key>id</key>
+			<string>unsecureMode</string>
+			<key>defaults</key>
+			<string>com.bd452.libPass</string>
+		</dict>
+	-->
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
 		</dict>
 		<dict>
 			<key>alignment</key>
@@ -47,10 +69,6 @@
 			<string>Save Changes</string>
 			<key>action</key>
 			<string>respringPopup</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
 		</dict>
 		<dict>
 			<key>cell</key>

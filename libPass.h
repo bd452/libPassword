@@ -15,6 +15,9 @@ BOOL prefsFileIsGood = NO;
 BOOL deviceCodeIsOn = YES;
 BOOL isLocked = YES;
 BOOL isToggled = NO;
+BOOL registered_toggleAction = NO;
+BOOL registered_ttpAction = NO;
+BOOL registered_bypassAction = NO;
 //NSString *passCode = nil;
 
 
@@ -45,6 +48,10 @@ BOOL isToggled = NO;
 - (void)willMoveToWindow:(id)fp8;
 @end
 
+@interface SBLockScreenViewController
+-(BOOL)isPasscodeLockVisible;
+@end
+
 @interface SpringBoard
 - (void)relaunchSpringBoard;
 @end
@@ -68,7 +75,7 @@ BOOL isToggled = NO;
 
 
 
-	
+
 
 
 @protocol libPassEvents <NSObject>
@@ -80,9 +87,9 @@ BOOL isToggled = NO;
 
 
 @interface libPass : NSObject <libPassEvents> {
-	
+
 	id <libPassEvents> delegate;
-	
+
 }
 @property (retain) id delegate;
 +(void)passwordWasEnteredHandler:(NSString *)password;
@@ -95,16 +102,12 @@ BOOL isToggled = NO;
 //+ (NSDictionary *)libPassPrefs;
 + (BOOL)isPasscodeForced;
 + (void)setIsPasscodeForced:(BOOL)value;
-
+//Event can be "unlockEvent", "toggleEvent", or "lockEvent", respectively.
+//The tweak won't register your actions without using this
++(void)registerForEvent:(NSString *)event fromSender:(NSString *)sender;
 +(void)unlockWithCodeEnabled:(BOOL)enabled;
 +(void)lockWithCodeEnabled:(BOOL)enabled;
 +(void)respringAfterDelay:(int)seconds;
 
 //@property (nonatomic) BOOL isPasscodeForced;
 @end
-
-
-
-
-
-

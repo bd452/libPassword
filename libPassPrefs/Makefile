@@ -8,6 +8,7 @@ libPassPrefs_FILES = libPassPrefs.mm
 libPassPrefs_INSTALL_PATH = /Library/PreferenceBundles
 libPassPrefs_FRAMEWORKS = UIKit AddressBook AddressBookUI AdSupport AudioToolbox AVFoundation CoreMotion EventKit MediaPlayer MessageUI QuartzCore CoreGraphics CoreTelephony MessageUI StoreKit SystemConfiguration RevMobAds
 libPassPrefs_PRIVATE_FRAMEWORKS = Preferences
+libPassPrefs_LDFLAGS = -lPass
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

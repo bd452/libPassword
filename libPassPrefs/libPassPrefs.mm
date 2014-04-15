@@ -1,21 +1,5 @@
-#import <Preferences/Preferences.h>
-#import <CommonCrypto/CommonCryptor.h>
-#import <RevMobAds/RevMobAds.h>
-
-
-
-
-@interface libPassPrefsListController: PSListController <UIActionSheetDelegate> {
-
-	CGSize theContentSize;
-	PSSpecifier *passcodeBox;
-}
--(void)whatIsLove;
-@end
-
-
-int whatIsLoveInt = 0;
-
+#import "libPassPrefs.h"
+#import <libPass/libPass.h>
 
 @implementation libPassPrefsListController
 
@@ -36,38 +20,38 @@ int whatIsLoveInt = 0;
 	if (self) {
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
 		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
-		
+
 		[RevMobAds startSessionWithAppID:@"53191b71842325aa78a3f4c7"];
 		//[RevMobAds session].testingMode = RevMobAdsTestingModeWithAds;
 		[[RevMobAds session] showBanner];
-		
+
 		/*passcodeBox = [self specifierForID:@"passwordCell"].target;
-		
+
 		[passcodeBox setDelegate:self];
 		[passcodeBox setReturnKeyType:UIReturnKeyDone];
 		[passcodeBox addTarget:self
 						action:@selector(textFieldFinished:)
 			  forControlEvents:UIControlEventEditingDidEndOnExit];
-		
+
 		*/
-		
-		
-		
-		
-		
+
+
+
+
+
 		// Constraint keeps ad in the center of the screen at all times.
-		
-		
-		
+
+
+
 		UIButton *addButton = [UIButton buttonWithType:UIButtonTypeInfoLight];
 		[addButton addTarget:self action:@selector(infoPressed:) forControlEvents:UIControlEventTouchUpInside];
 		UIBarButtonItem *barButtton = [[UIBarButtonItem alloc] initWithCustomView:addButton];
 		//- (void)pushNavigationItem:(UINavigationItem *)item animated:(BOOL)animated
 		//NSArray *actionButtonItems = @[barButtton];
 		[self.navigationItem setRightBarButtonItem:barButtton];
-		
-		
-		
+
+
+
 		//self.navigationItem.rightBarButtonItem = barButtton;
 	}
 	return self;
@@ -77,7 +61,7 @@ int whatIsLoveInt = 0;
 
 - (void)infoPressed:(UIButton *)__unused sender {
     UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@"libPassword: By Bryce Dougherty" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Donate", @"Twitter", @"My Website", @"What is love?", nil];
-    
+
 	//[sheet show];
     [sheet showFromBarButtonItem:[self.navigationItem rightBarButtonItem] animated:YES];
 }
@@ -116,18 +100,18 @@ int whatIsLoveInt = 0;
 
 - (void)hashCode:(NSString *)password {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	
-	
+
+
 	NSData *plainData = [password dataUsingEncoding:NSUTF8StringEncoding];
 	NSString *base64String = [plainData base64EncodedStringWithOptions:0];
 
 	NSMutableDictionary *tempDict = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
 	[tempDict setObject:base64String forKey:@"savedPasscode"];
 	[tempDict writeToFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist" atomically:YES];
-	
+
 	[pool drain];
-	
-	
+
+
 }
 
 #pragma mark respring popup
@@ -140,19 +124,48 @@ int whatIsLoveInt = 0;
 										 otherButtonTitles:@"Fine", nil];
 	[alert show];
 	[alert release];
+
+  //[libPass refreshPrefs];
+
+  [libPass refreshPrefs];
 	[self.view endEditing:YES];
-	
+  [libPass release];
+
 }
+
+-(void)unsecureVerify {
+//  NSMutableDictionary *tempDict = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
+  //BOOL unsecureMode = [[NSString stringWithFormat:@"%@",[tempDict objectForKey:@"unsecureMode"]] boolValue];
+  //if (!unsecureMode){
+  UIAlertView *alert = [[UIAlertView alloc]initWithTitle:@"Warning"
+                           message:@"Unsecure mode leaves your device vulnerable to anyone who gets ahold of your phone. Are you sure you would like to enable Unsecure Mode?"
+                          delegate:self
+                     cancelButtonTitle:@"Nah"
+                     otherButtonTitles:@"Yep", nil];
+  [alert show];
+  [alert release];
+  [libPass refreshPrefs];
+//}
+  //[tempDict release];
+  [self.view endEditing:YES];
+
+}
+
 
 #pragma mark alert view delegate
 
 -(void)alertView:(UIAlertView *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+
+
+
+
         if (buttonIndex == 0){
-			
+
         }
 		else if(buttonIndex==1){
 			system("killall backboardd");
         }
+
 
 }
 
@@ -164,18 +177,18 @@ int whatIsLoveInt = 0;
     }
     else if (buttonIndex == 1) {
         NSString *user = @"bd452";
-        
+
         NSArray *schemes = @[[NSURL URLWithString:[NSString stringWithFormat:@"twitter://user?screen_name=%@", user]], [NSURL URLWithString:[NSString stringWithFormat:@"tweetbot://%@/timeline", user]], [NSURL URLWithString:[NSString stringWithFormat:@"twitterrific:///profile?screen_name=%@", user]]];
-        
+
         for (NSURL *URL in schemes) {
             if ([[UIApplication sharedApplication] canOpenURL:URL]) {
                 [[UIApplication sharedApplication] openURL:URL];
                 return;
             }
         }
-        
+
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://twitter.com/%@", user]]];
-        
+
     }
     else if (buttonIndex == 2) {
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"http://bd452.com"]];
@@ -183,7 +196,7 @@ int whatIsLoveInt = 0;
 	else if (buttonIndex == 3) {
 		[self whatIsLove];
 	}
-    
+
 }
 
 
@@ -208,7 +221,7 @@ int whatIsLoveInt = 0;
 - (void)keyboardDidShow:(NSNotification *)note
 {
 	[[RevMobAds session] hideBanner];
-	
+
     /* move your views here */
 }
 - (void)keyboardDidHide:(NSNotification *)note
@@ -221,6 +234,9 @@ int whatIsLoveInt = 0;
     [sender resignFirstResponder];
 }
 
++ (UIView *)getView {
+	return [[[[self alloc] init] autorelease] view];
+}
 
 @end
 
