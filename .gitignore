@@ -1,0 +1,13 @@
+.theos
+theos
+_
+obj
+.DS_Store
+*.deb
+debs
+*.o
+*.stamp
+.stamp
+libPass_link.*
+*_new
+
