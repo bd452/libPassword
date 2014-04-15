@@ -24,5 +24,4 @@ To-do list:
   - Accept multiple passcodes
   - etc.
 
-&copy; 2014 Bryce Dougherty and Zac (twodayslate)
   
