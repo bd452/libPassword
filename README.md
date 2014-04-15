@@ -1,7 +1,15 @@
 libPassword
 ===========
 
+#### This is some of the messiest code I've written, done almost purely in the wee hours of the morning (like 3am - 5am). 
+
+#### To be honest, it's a miracle that it works halfway decently.
+
+#### With a bit of help, this will hopefully get to the point that any passcode-related tweak will be possible in like 20 lines of code.
+----------  
+
 A library for the iOS Password
+ 
 
 This is working, but there are a few issues. I can use all the help I can get, and I'm hoping this will become a public effort.
 
