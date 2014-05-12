@@ -10,7 +10,7 @@ include theos/makefiles/bundle.mk
 
 TWEAK_NAME = libPass
 
-libPass_FILES = libPass.m Tweak.xm
+libPass_FILES = Tweak.xm
 libPass_FRAMEWORKS = AVFoundation UIKit Security
 
 include $(THEOS_MAKE_PATH)/tweak.mk
