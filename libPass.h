@@ -18,9 +18,26 @@ BOOL isToggled = NO;
 BOOL registered_toggleAction = NO;
 BOOL registered_ttpAction = NO;
 BOOL registered_bypassAction = NO;
-//NSString *passCode = nil;
+NSString *passCode = nil;
+NSString *decodedString = nil;
 
-
+NSString* getUDID()
+{
+    return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    
+    //CFStringRef uniqueIdentifier = MGCopyAnswer(CFSTR("UniqueDeviceID"));
+    //return (NSString*)uniqueIdentifier;
+    
+    /*NSString *retVal = nil;
+     CFTypeRef tmp = MGCopyAnswer(CFSTR("UniqueDeviceID"));
+     if (tmp) {
+     //retVal = [NSString stringWithString:tmp];
+     NSData *resultData = CFBridgingRelease(tmp);
+     retVal = [[NSString alloc] initWithData:resultData encoding:NSUTF8StringEncoding];
+     CFRelease(tmp);
+     }
+     return retVal;*/
+}
 
 @interface SBUserAgent
 - (void)lockAndDimDevice;
@@ -57,9 +74,7 @@ BOOL registered_bypassAction = NO;
 @end
 
 @interface DevicePINController
-
 - (void)setOldPassword:(id)arg1;
-
 @end
 
 @interface BBBulletinRequest : NSObject
@@ -73,24 +88,15 @@ BOOL registered_bypassAction = NO;
 - (void)observer:(id)observer addBulletin:(BBBulletinRequest *)bulletin forFeed:(int)feed;
 @end
 
-
-
-
-
-
 @protocol libPassEvents <NSObject>
 @optional
-
 -(void)passwordWasEntered:(NSString *)password;
-
 @end
 
-
 @interface libPass : NSObject <libPassEvents> {
-
 	id <libPassEvents> delegate;
-
 }
+
 @property (retain) id delegate;
 +(void)passwordWasEnteredHandler:(NSString *)password;
 //+ (void)passwordEntered:(NSString *)password;
