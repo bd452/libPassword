@@ -1,12 +1,13 @@
-TARGET = iPhone:7.0:2.0
-#TARGET = simulator:clang:7.0
-ARCHS = armv7 arm64
+TARGET = iphone:clang:7.1:2.0
+ARCHS = armv7 armv7s arm64
 include theos/makefiles/common.mk
+
+CFLAGS = -I..
 
 BUNDLE_NAME = libPassPrefs
 libPassPrefs_FILES = libPassPrefs.mm
 libPassPrefs_INSTALL_PATH = /Library/PreferenceBundles
-libPassPrefs_FRAMEWORKS = UIKit AddressBook AddressBookUI AdSupport AudioToolbox AVFoundation CoreMotion EventKit MediaPlayer MessageUI QuartzCore CoreGraphics CoreTelephony MessageUI StoreKit SystemConfiguration RevMobAds
+libPassPrefs_FRAMEWORKS = UIKit
 libPassPrefs_PRIVATE_FRAMEWORKS = Preferences
 libPassPrefs_LDFLAGS = -lPass
 

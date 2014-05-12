@@ -1,5 +1,5 @@
 #import "libPassPrefs.h"
-#import <libPass/libPass.h>
+#import "libPass.h"
 
 @implementation libPassPrefsListController
 
@@ -18,41 +18,12 @@
 -(instancetype)init {
 	self = [super init];
 	if (self) {
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidShow:) name:UIKeyboardDidShowNotification object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardDidHide:) name:UIKeyboardDidHideNotification object:nil];
-
-		[RevMobAds startSessionWithAppID:@"53191b71842325aa78a3f4c7"];
-		//[RevMobAds session].testingMode = RevMobAdsTestingModeWithAds;
-		[[RevMobAds session] showBanner];
-
-		/*passcodeBox = [self specifierForID:@"passwordCell"].target;
-
-		[passcodeBox setDelegate:self];
-		[passcodeBox setReturnKeyType:UIReturnKeyDone];
-		[passcodeBox addTarget:self
-						action:@selector(textFieldFinished:)
-			  forControlEvents:UIControlEventEditingDidEndOnExit];
-
-		*/
-
-
-
-
-
-		// Constraint keeps ad in the center of the screen at all times.
-
-
-
 		UIButton *addButton = [UIButton buttonWithType:UIButtonTypeInfoLight];
 		[addButton addTarget:self action:@selector(infoPressed:) forControlEvents:UIControlEventTouchUpInside];
 		UIBarButtonItem *barButtton = [[UIBarButtonItem alloc] initWithCustomView:addButton];
 		//- (void)pushNavigationItem:(UINavigationItem *)item animated:(BOOL)animated
 		//NSArray *actionButtonItems = @[barButtton];
 		[self.navigationItem setRightBarButtonItem:barButtton];
-
-
-
-		//self.navigationItem.rightBarButtonItem = barButtton;
 	}
 	return self;
 }
@@ -101,7 +72,6 @@
 - (void)hashCode:(NSString *)password {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-
 	NSData *plainData = [password dataUsingEncoding:NSUTF8StringEncoding];
 	NSString *base64String = [plainData base64EncodedStringWithOptions:0];
 
@@ -125,9 +95,6 @@
 	[alert show];
 	[alert release];
 
-  //[libPass refreshPrefs];
-
-  [libPass refreshPrefs];
 	[self.view endEditing:YES];
   [libPass release];
 
@@ -144,9 +111,6 @@
                      otherButtonTitles:@"Yep", nil];
   [alert show];
   [alert release];
-  [libPass refreshPrefs];
-//}
-  //[tempDict release];
   [self.view endEditing:YES];
 
 }
@@ -154,19 +118,13 @@
 
 #pragma mark alert view delegate
 
--(void)alertView:(UIAlertView *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-
-
-
-
-        if (buttonIndex == 0){
-
-        }
-		else if(buttonIndex==1){
-			system("killall backboardd");
-        }
-
-
+-(void)alertView:(UIAlertView *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 0){
+    }
+    else if(buttonIndex==1){
+        system("killall backboardd");
+    }
 }
 
 #pragma mark Action sheet delegate
@@ -196,48 +154,13 @@
 	else if (buttonIndex == 3) {
 		[self whatIsLove];
 	}
-
 }
-
 
 -(id)initForContentSize:(CGSize)contentSize
 {
 	theContentSize = contentSize;
 	return [super initForContentSize:contentSize];
 }
-
-#pragma mark dealloc
-
--(void)dealloc {
-	[[RevMobAds session] hideBanner];
-	[super dealloc];
-}
-
-/*-(void)_showKeyboard {
-	[super _showKeyboard];
-	[[RevMobAds session] hideBanner];
-}
-*/
-- (void)keyboardDidShow:(NSNotification *)note
-{
-	[[RevMobAds session] hideBanner];
-
-    /* move your views here */
-}
-- (void)keyboardDidHide:(NSNotification *)note
-{
-	[[RevMobAds session] showBanner];
-    /* move your views here */
-}
-- (IBAction)textFieldFinished:(id)sender
-{
-    [sender resignFirstResponder];
-}
-
-+ (UIView *)getView {
-	return [[[[self alloc] init] autorelease] view];
-}
-
 @end
 
 // vim:ft=objc

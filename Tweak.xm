@@ -1,13 +1,10 @@
 #import "libPass.h"
-
-#import "libPass.h"
+#define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
 @implementation libPass
-//@synthesize isPasscodeForced;
-@synthesize delegate;
 
 +(void)unlockWithCodeEnabled:(BOOL)enabled {
-	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
+	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:SETTINGS_FILE];
 	//[prefs release];
 	if (fileExists) {
         if ([passCode isEqual:@""]) {
@@ -18,11 +15,10 @@
         }
         
         if (enabled) {
-            //	[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] unlockUIFromSource:1 withOptions:nil];
             [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] unlockUIFromSource:1 withOptions:nil];
         }
-        
-        if (!enabled) {
+        else
+        {
             isUsingAction = YES;
             [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",decodedString]];
         }
@@ -33,7 +29,6 @@
 		[alert show];
 		enabled = YES;
 	}
-    
 }
 
 + (BOOL)isPasscodeEntered {
@@ -42,10 +37,7 @@
 
 + (void)lockWithCodeEnabled:(BOOL)enabled {
 	NSLog(@"Lock with code enabled: %d", enabled);
-	//NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
-	//tweakEnabled = [[prefs objectForKey:@"tweakIsEnabled"] boolValue];
-	//passCode = [NSString stringWithFormat:@"%@",[prefs objectForKey:@"savedPasscode"]];
-	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
+	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:SETTINGS_FILE];
 	if (fileExists) {
 		if ([passCode isEqual:@""]) {
 			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
@@ -53,16 +45,9 @@
 			[alert show];
 			enabled = YES;
 		}
-        
-		if (enabled) {
-			[(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
-		}
-        
-		if (!enabled) {
-			[(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
-			isLockedUnsecure = YES;
-			NSLog(@"Locked with code disabled");
-		}
+
+        [(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
+        isLockedUnsecure = !enabled;
 	}
 	else if (!fileExists){
 		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
@@ -152,7 +137,6 @@
 	if (isLockedUnsecure) {
 		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",decodedString]];
 	}
-    
 	%orig;
 }
 %end
@@ -189,27 +173,13 @@
 
 %end
 
-
 %hook SBDeviceLockController
-
 - (BOOL)attemptDeviceUnlockWithPassword:(id)fp8 appRequested:(BOOL)fp12 {
-    
     NSLog(@"attempt device unlock with password %d", %orig);
-	//NSLog(@"%@",passCode);
-    
 	if (isUsingAction || isLockedUnsecure || isToggled) {
-		//NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
-		//tweakEnabled = [[prefs objectForKey:@"tweakIsEnabled"] boolValue];
-		//NSString *savedCode = [NSString stringWithFormat:@"%@",[prefs objectForKey:@"savedPasscode"]];
 		fp8 = [NSString stringWithFormat:@"%@",decodedString];
-		//fp8 = [NSString stringWithFormat:@"%@",[prefs objectForKey:@"savedPasscode"]];
-		//[prefs release];
-		//[savedCode release];
 	}
-    
-    
 	return %orig;
-    
 }
 
 -(BOOL)deviceHasPasscodeSet {
@@ -237,17 +207,8 @@
 
 %ctor
 {
-	NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
+	NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
 	passCode = [NSString stringWithFormat:@"%@",[prefs objectForKey:@"savedPasscode"]];
 	NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[prefs objectForKey:@"savedPasscode"] options:0];
 	decodedString = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-    
-	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist"];
-	//[prefs release];
-	if (!fileExists) {
-        
-		NSMutableDictionary *tempDict = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/libPass/doNotDelete.plist"];
-		//[tempDict setObject:@"" forKey:@"savedPasscode"];
-		[tempDict writeToFile:@"/var/mobile/Library/Preferences/com.bd452.libPass.plist" atomically:YES];
-	}
 }

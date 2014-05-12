@@ -93,19 +93,13 @@ NSString* getUDID()
 -(void)passwordWasEntered:(NSString *)password;
 @end
 
-@interface libPass : NSObject <libPassEvents> {
-	id <libPassEvents> delegate;
-}
-
+@interface libPass : NSObject <libPassEvents> 
 @property (retain) id delegate;
 +(void)passwordWasEnteredHandler:(NSString *)password;
-//+ (void)passwordEntered:(NSString *)password;
 + (void)togglePasscode;
 + (BOOL)toggleValue;
 +(void)setPasscodeToggle:(BOOL)enabled;
 + (BOOL)isPasscodeEntered;
-//+ (BOOL)checkPrefsFileIsGood;
-//+ (NSDictionary *)libPassPrefs;
 + (BOOL)isPasscodeForced;
 + (void)setIsPasscodeForced:(BOOL)value;
 //Event can be "unlockEvent", "toggleEvent", or "lockEvent", respectively.
@@ -114,6 +108,4 @@ NSString* getUDID()
 +(void)unlockWithCodeEnabled:(BOOL)enabled;
 +(void)lockWithCodeEnabled:(BOOL)enabled;
 +(void)respringAfterDelay:(int)seconds;
-
-//@property (nonatomic) BOOL isPasscodeForced;
 @end
