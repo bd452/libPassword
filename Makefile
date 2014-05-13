@@ -15,5 +15,5 @@ libPass_FRAMEWORKS = AVFoundation UIKit Security
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-#SUBPROJECTS += libPassPrefs
+SUBPROJECTS += libPassPrefs
 include $(THEOS_MAKE_PATH)/aggregate.mk
