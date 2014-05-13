@@ -109,13 +109,13 @@
 // This opens the door to a large variety of possibilities.
 - (BOOL) shouldAllowPasscode:(NSString*)passcode
 {
-    BOOL result = passcode == self.devicePasscode;;
+    BOOL result = [passcode isEqualToString:self.devicePasscode];
     
     for (id delegate in delegates)
     {
-        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(shouldAllowPasscode:)])
+        if (delegate && [delegate respondsToSelector:@selector(shouldAllowPasscode:)])
         {
-            [delegate shouldAllowPasscode:passcode];
+            result = result || [delegate shouldAllowPasscode:passcode];
         }
     }
     

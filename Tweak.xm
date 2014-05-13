@@ -26,26 +26,10 @@ NSString* getUDID()
 %end
 
 %hook SBLockScreenManager
-- (BOOL)attemptUnlockWithPasscode:(id)fp8
-{
-    // This may all be redundant (see [SBDeviceLockController attemptDeviceUnlockWithPassword:appRequested:])
-    /*
-	[[LibPass sharedInstance] passwordWasEnteredHandler:fp8];
-
-	if ([LibPass sharedInstance].isPasscodeOn == NO)
-    {
-		return 	%orig([LibPass sharedInstance].devicePasscode);
-	}
-    */
-
-    return %orig;
-}
-
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
 	[[LibPass sharedInstance] setPasscodeToggle:YES];
 	%orig;
 }
-
 %end
 
 %hook SBDeviceLockController
@@ -63,8 +47,11 @@ NSString* getUDID()
             // if the entered passcode is the correct TP passcode. LibPassword will then perform a %orig using the system 
             // passcode (which should be granted access), not always bypassing the passcode but allowing for 
             // more than passcode to be "correct"
-            
             result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+            
+            // We already know it isn't the correct device passcode.
+            // Not returning here would cause many further problems.
+            return result;
         }
     }
     else
