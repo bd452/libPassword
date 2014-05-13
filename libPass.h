@@ -1,5 +1,3 @@
-#import "headers.h"
-
 @protocol LibPassDelegate <NSObject>
 @optional
 // Used to allow basic detection of different passcodes
