@@ -1,7 +1,7 @@
 Package: com.bd452.libpass
 Name: libPassword
 Depends: mobilesubstrate
-Version: 1.5.0
+Version: 2.0.2
 Architecture: iphoneos-arm
 Description: Library for the iOS Passcode
 Maintainer: bd452
