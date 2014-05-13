@@ -1,5 +1,7 @@
 #import "libPass.h"
+#define _LIBPASS_INTERNAL
 #import "libPass_compat.h"
+#undef _LIBPASS_INTERNAL
 
 @implementation libPass
 @synthesize delegate;

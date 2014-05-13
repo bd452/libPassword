@@ -1,5 +1,6 @@
 #define _LIBPASS_INTERNAL
 #import "libPass.h"
+#undef _LIBPASS_INTERNAL
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <substrate.h>

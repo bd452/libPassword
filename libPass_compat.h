@@ -3,7 +3,10 @@
 // This is entirely for backwards compatibility.
 // DO NOT begin using it.
 
-/*__deprecated*/ @protocol libPassEvents <NSObject>
+#ifndef _LIBPASS_INTERNAL
+__deprecated
+#endif
+@protocol libPassEvents <NSObject>
 @optional
 
 -(void)passwordWasEntered:(NSString *)password;
@@ -11,7 +14,10 @@
 @end
 
 
-/*__deprecated*/ @interface libPass : NSObject <libPassEvents> {
+#ifndef _LIBPASS_INTERNAL
+__deprecated
+#endif
+@interface libPass : NSObject <libPassEvents> {
     
 	id <libPassEvents> delegate;
     
