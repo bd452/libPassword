@@ -5,9 +5,14 @@
 //#import <CommonCrypto/CommonCrypto.h>
 #import <Security/Security.h>
 
+// MobileGestalt stuff for UDID
+extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
+
+// returns the device's UDID. Because we are in SpringBoard this works
 NSString* getUDID()
 {
-    return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
+    return udid;
 }
 
 @interface SBUserAgent
@@ -26,22 +31,6 @@ NSString* getUDID()
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12;
 - (void)unlockUIFromSource:(int)fp8 withOptions:(id)fp12;
 - (BOOL)isUILocked;
-@end
-
-@interface SBLockScreenView
-- (void)scrollViewDidScroll:(id)fp8;
-- (void)setPasscodeView:(id)fp8;
-- (id)initWithFrame:(struct CGRect)fp8;
-- (void)_layoutPasscodeView;
-- (void)willMoveToWindow:(id)fp8;
-@end
-
-@interface SBLockScreenViewController
--(BOOL)isPasscodeLockVisible;
-@end
-
-@interface SpringBoard
-- (void)relaunchSpringBoard;
 @end
 
 @interface BBBulletinRequest : NSObject

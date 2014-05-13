@@ -27,12 +27,6 @@
 
 - (void)lockWithCodeEnabled:(BOOL)enabled
 {
-    if ([self.devicePasscode isEqual:@""]) {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
-        [alert show];
-        return;
-    }
-
     [(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
     [self setPasscodeToggle:enabled];
 }
@@ -85,12 +79,13 @@
 
 %hook SBLockScreenManager
 - (BOOL)attemptUnlockWithPasscode:(id)fp8 {
-    
     %orig;
+
 	[[libPass sharedInstance] passwordWasEnteredHandler:fp8];
+
 	if ([libPass sharedInstance].isPasscodeOn == NO)
     {
-		return 	[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[libPass sharedInstance].devicePasscode]];
+		return 	%orig([libPass sharedInstance].devicePasscode);
 	}
     return %orig;
 }
@@ -135,26 +130,22 @@
     if (![prefs[@"devicePasscode"] isKindOfClass:[NSData class]])// no passcode stored
     {
         UIAlertView *alert = [[UIAlertView alloc]
-            initWithTitle:@"Appellancy"
+            initWithTitle:@"libPass"
             message:@"No device passcode stored. Please unlock the device with your passcode."
             delegate:nil
             cancelButtonTitle:@"OK"
             otherButtonTitles:nil];
         [alert show];
     }
-    else
+    else if (result && [libPass sharedInstance].devicePasscode != nil && [libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
     {
-        if (result && [libPass sharedInstance].devicePasscode != nil && [libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
-        {
-            NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-            if (!prefs)
-                prefs = [[NSMutableDictionary alloc] init];
-            [libPass sharedInstance].devicePasscode = arg1;
-            [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
-            [prefs writeToFile:SETTINGS_FILE atomically:YES];
-        }
+        NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
+        if (!prefs)
+            prefs = [[NSMutableDictionary alloc] init];
+        [libPass sharedInstance].devicePasscode = arg1;
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
-
 
     return result;
 }

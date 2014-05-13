@@ -5,15 +5,10 @@ CFLAGS = -fobjc-arc
 THEOS_PACKAGE_DIR_NAME = debs
 
 include theos/makefiles/common.mk
-include theos/makefiles/library.mk
-include theos/makefiles/bundle.mk
 
 TWEAK_NAME = libPass
-
 libPass_FILES = Tweak.xm
-libPass_FRAMEWORKS = AVFoundation UIKit Security
+libPass_FRAMEWORKS = UIKit
+libPass_LIBRARIES = MobileGestalt
 
 include $(THEOS_MAKE_PATH)/tweak.mk
-
-SUBPROJECTS += libPassPrefs
-include $(THEOS_MAKE_PATH)/aggregate.mk
