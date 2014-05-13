@@ -16,6 +16,35 @@
     return instance;
 }
 
+- (id) init
+{
+    delegates = [[NSMutableArray alloc] init];
+    return [super init];
+}
+
+-(BOOL) isDelegateRegistered:(id)delegate
+{
+    return [delegates indexOfObject:delegate] != NSNotFound;
+}
+
+-(void) registerDelegate:(id)delegate
+{
+    if ([self isDelegateRegistered:delegate] || delegate == nil)
+        return;
+    
+    [delegates addObject:delegate];
+}
+-(void) deregisterDelegate:(id)delegate
+{
+    if (![self isDelegateRegistered:delegate] || delegate == nil)
+        return;
+
+    NSUInteger num = [delegates indexOfObject:delegate];
+    if (NSNotFound == num)
+        return;
+    [delegates removeObjectAtIndex:num];
+}
+
 - (void)unlockWithCodeEnabled:(BOOL)enabled 
 {
     if (enabled) {
@@ -62,8 +91,13 @@
 }
 
 -(void)passwordWasEnteredHandler:(NSString *)password {
-    if (self.delegate)
-        [self.delegate passwordWasEntered:password];
+    for (id delegate in delegates)
+    {
+        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)])
+        {
+            [delegate passwordWasEntered:password];
+        }
+    }
 }
 @end
 

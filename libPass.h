@@ -44,8 +44,12 @@ NSString* getUDID()
 @end
 
 @interface LibPass : NSObject
+{
+    NSMutableArray *delegates;
+}
+
 @property (retain) id delegate;
-// This is probably a really bad idea...
+// This is probably a really, really bad idea...
 @property (nonatomic, retain) NSString* devicePasscode;
 @property (nonatomic) BOOL isPasscodeOn;
 
