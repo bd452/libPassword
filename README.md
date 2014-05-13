@@ -17,11 +17,14 @@ Things that are working:
   - Lock with/without the code
   - Toggle the code On/Off
 
+Things that need tested:
+
+  - Detect when a certain password is entered (using the LibPassDelegate)
+  - Accepting multiple passcodes (also using the LibPassDelegate)
+
 To-do list:
 
   - Clean up code (a lot)
-  - Detect when a certain password is entered
-  - Accept multiple passcodes
   - etc.
 
   

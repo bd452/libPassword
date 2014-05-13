@@ -38,22 +38,32 @@ NSString* getUDID()
 - (void)observer:(id)observer addBulletin:(BBBulletinRequest *)bulletin forFeed:(int)feed;
 @end
 
-@protocol libPassEvents <NSObject>
+@protocol LibPassDelegate <NSObject>
 @optional
--(void)passwordWasEntered:(NSString *)password;
+// Used to allow basic detection of different passcodes
+-(void)passwordWasEntered:(NSString*)password;
+// Used during shouldAllowPasscode: to check if the passcode is "correct"
+-(BOOL)shouldAllowPasscode:(NSString*)password;
 @end
 
-@interface libPass : NSObject <libPassEvents> 
+@interface LibPass : NSObject
+{
+    NSMutableArray *delegates;
+}
+
 @property (retain) id delegate;
-// This is probably a really bad idea...
+// This is probably a really, really bad idea...
 @property (nonatomic, retain) NSString* devicePasscode;
 @property (nonatomic) BOOL isPasscodeOn;
 
 + (instancetype) sharedInstance;
 
-- (void)passwordWasEnteredHandler:(NSString *)password;
-- (void)togglePasscode;
-- (void)setPasscodeToggle:(BOOL)enabled;
-- (void)unlockWithCodeEnabled:(BOOL)enabled;
-- (void)lockWithCodeEnabled:(BOOL)enabled;
+- (void) registerDelegate:(id)delegate;
+- (void) deregisterDelegate:(id)delegate;
+- (BOOL) shouldAllowPasscode:(NSString*)passcode;
+- (void) passwordWasEnteredHandler:(NSString *)password;
+- (void) togglePasscode;
+- (void) setPasscodeToggle:(BOOL)enabled;
+- (void) unlockWithCodeEnabled:(BOOL)enabled;
+- (void) lockWithCodeEnabled:(BOOL)enabled;
 @end

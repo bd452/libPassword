@@ -5,15 +5,44 @@
 #import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
-@implementation libPass
+@implementation LibPass
 
 + (id) sharedInstance
 {
-    static libPass *instance;
+    static LibPass *instance;
     if (!instance)
-        instance = [[libPass alloc] init];
+        instance = [[LibPass alloc] init];
         
     return instance;
+}
+
+- (id) init
+{
+    delegates = [[NSMutableArray alloc] init];
+    return [super init];
+}
+
+-(BOOL) isDelegateRegistered:(id)delegate
+{
+    return [delegates indexOfObject:delegate] != NSNotFound;
+}
+
+-(void) registerDelegate:(id)delegate
+{
+    if ([self isDelegateRegistered:delegate] || delegate == nil)
+        return;
+    
+    [delegates addObject:delegate];
+}
+-(void) deregisterDelegate:(id)delegate
+{
+    if (![self isDelegateRegistered:delegate] || delegate == nil)
+        return;
+
+    NSUInteger num = [delegates indexOfObject:delegate];
+    if (NSNotFound == num)
+        return;
+    [delegates removeObjectAtIndex:num];
 }
 
 - (void)unlockWithCodeEnabled:(BOOL)enabled 
@@ -44,7 +73,7 @@
 		BBBulletinRequest *request = [[bulletinRequest alloc] init];
 		request.title = @"Password";
 		NSString *passcodeEnabledString;
-		if ([libPass sharedInstance].isPasscodeOn)
+		if ([LibPass sharedInstance].isPasscodeOn)
             passcodeEnabledString = @"enabled";
 		else
             passcodeEnabledString = @"disabled";
@@ -62,9 +91,30 @@
 }
 
 -(void)passwordWasEnteredHandler:(NSString *)password {
-    if (self.delegate)
-        [self.delegate passwordWasEntered:password];
+    for (id delegate in delegates)
+    {
+        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(passwordWasEntered:)])
+        {
+            [delegate passwordWasEntered:password];
+        }
+    }
 }
+
+- (BOOL) shouldAllowPasscode:(NSString*)passcode
+{
+    BOOL result = passcode == self.devicePasscode;;
+    
+    for (id delegate in delegates)
+    {
+        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(shouldAllowPasscode:)])
+        {
+            [delegate shouldAllowPasscode:passcode];
+        }
+    }
+
+    return result;
+}
+
 @end
 
 // *****************************************************************************
@@ -73,28 +123,31 @@
 
 %hook SBLockScreenViewControllerBase
 - (void)_transitionWallpaperFromLock {
-	if ([libPass sharedInstance].isPasscodeOn == NO) {
-		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[libPass sharedInstance].devicePasscode]];
+	if ([LibPass sharedInstance].isPasscodeOn == NO) {
+		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[LibPass sharedInstance].devicePasscode]];
 	}
 	%orig;
 }
 %end
 
 %hook SBLockScreenManager
-- (BOOL)attemptUnlockWithPasscode:(id)fp8 {
-    %orig;
+- (BOOL)attemptUnlockWithPasscode:(id)fp8
+{
+    // This may all be redundant (see [SBDeviceLockController attemptDeviceUnlockWithPassword:appRequested:])
+    /*
+	[[LibPass sharedInstance] passwordWasEnteredHandler:fp8];
 
-	[[libPass sharedInstance] passwordWasEnteredHandler:fp8];
-
-	if ([libPass sharedInstance].isPasscodeOn == NO)
+	if ([LibPass sharedInstance].isPasscodeOn == NO)
     {
-		return 	%orig([libPass sharedInstance].devicePasscode);
+		return 	%orig([LibPass sharedInstance].devicePasscode);
 	}
+    */
+
     return %orig;
 }
 
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
-	[[libPass sharedInstance] setPasscodeToggle:YES];
+	[[LibPass sharedInstance] setPasscodeToggle:YES];
 	%orig;
 }
 
@@ -102,7 +155,29 @@
 
 %hook SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
-    BOOL result = %orig([libPass sharedInstance].isPasscodeOn ? arg1 : [libPass sharedInstance].devicePasscode, arg2);
+    BOOL result;
+    if ([LibPass sharedInstance].isPasscodeOn)
+    {
+        // Passcode should not be arbitrarily bypassed, but we can still run checks
+        result = %orig;
+        
+        if (!result && [arg1 isKindOfClass:[NSString class]] && [[LibPass sharedInstance] shouldAllowPasscode:arg1])
+        {
+            // Passcode is not the system passcode but it should still be allowed access
+            // For example, something like TimePasscode could be possible by registering a delegate to return YES
+            // if the entered passcode is the correct TP passcode. LibPassword will then perform a %orig using the system 
+            // passcode (which should be granted access), not always bypassing the passcode but allowing for 
+            // more than passcode to be "correct"
+            
+            result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+        }
+    }
+    else
+    {
+        // Passcode should be bypassed (no matter what)
+        result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+    }
+    //BOOL result = %orig([LibPass sharedInstance].isPasscodeOn ? arg1 : [LibPass sharedInstance].devicePasscode, arg2);
 
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
@@ -110,20 +185,20 @@
 
     if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"devicePasscode"] isKindOfClass:[NSData class]] && result)
     {
-        [libPass sharedInstance].devicePasscode = arg1;
+        [LibPass sharedInstance].devicePasscode = arg1;
         [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
     else if ([prefs[@"devicePasscode"] isKindOfClass:[NSData class]])
     {
         NSData *passcodeData = [prefs[@"devicePasscode"] AES256DecryptWithKey:getUDID()];
-        [libPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
+        [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
             
         if (result)
         {
-            if ([libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
+            if ([LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
             {
-                [libPass sharedInstance].devicePasscode = arg1;
+                [LibPass sharedInstance].devicePasscode = arg1;
                 [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
                 [prefs writeToFile:SETTINGS_FILE atomically:YES];
             }
@@ -140,12 +215,16 @@
             otherButtonTitles:nil];
         [alert show];
     }
-    else if (result && [libPass sharedInstance].devicePasscode != nil && [libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
+    else if (result && [LibPass sharedInstance].devicePasscode != nil && [LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
     {
+        // Basically here are the checks:
+        // 1. arg1 actually is correct and a NSString
+        // 2. arg1 != an existing stored passcode
+
         NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
         if (!prefs)
             prefs = [[NSMutableDictionary alloc] init];
-        [libPass sharedInstance].devicePasscode = arg1;
+        [LibPass sharedInstance].devicePasscode = arg1;
         [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
@@ -156,25 +235,21 @@
 %end
 
 %hook SBUserAgent
-- (BOOL)deviceIsPasscodeLocked {
-	NSLog(@"SBUserAgent deviceIsPasscodeLocked: %d", %orig);
-	if ([libPass sharedInstance].isPasscodeOn == NO) {
-		NSLog(@"device is NOT passcode locked");
+- (BOOL)deviceIsPasscodeLocked 
+{
+	if ([LibPass sharedInstance].isPasscodeOn == NO)
 		return NO;
-	}
-	else {
-		NSLog(@"device is origin");
+	else
 		return %orig;
-	}
 }
 %end
 
 %ctor
 {
-	NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
+	NSDictionary *prefs = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if ([prefs objectForKey:@"savedPasscode"] != nil)
     {
         NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
-        [libPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
+        [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
     }
 }
