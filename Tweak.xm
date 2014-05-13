@@ -6,9 +6,9 @@
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
 @implementation LibPass
-
 + (id) sharedInstance
 {
+    // This (helps) prevent multiple instances from being created which would cause issues
     static LibPass *instance;
     if (!instance)
         instance = [[LibPass alloc] init];
@@ -65,6 +65,9 @@
 
 - (void)togglePasscode {
 	self.isPasscodeOn = !self.isPasscodeOn;
+    
+    // This shows a banner notification to the user
+    // letting them know what status the passcode is in right now.
 
 	Class bulletinBannerController = objc_getClass("SBBulletinBannerController");
 	Class bulletinRequest = objc_getClass("BBBulletinRequest");
@@ -100,6 +103,9 @@
     }
 }
 
+// This is used when unlocking the device and isPasscodeOn == YES to allow for 
+// multiple passcode to be used and the like.
+// This opens the door to a large variety of possibilities.
 - (BOOL) shouldAllowPasscode:(NSString*)passcode
 {
     BOOL result = passcode == self.devicePasscode;;
@@ -243,6 +249,9 @@
 %hook SBUserAgent
 - (BOOL)deviceIsPasscodeLocked 
 {
+    // If the passcode should be bypassed return NO.
+    // Otherwise, return the default value
+
 	if ([LibPass sharedInstance].isPasscodeOn == NO)
 		return NO;
 	else
