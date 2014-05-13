@@ -17,6 +17,12 @@
     return instance;
 }
 
+// Retained for backwards compatibility. PLEASE do not use AT ALL if possible...
++(BOOL) toggleValue
+{
+    return ![LibPass sharedInstance].isPasscodeOn;
+}
+
 - (id) init
 {
     delegates = [[NSMutableArray alloc] init];

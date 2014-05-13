@@ -58,6 +58,8 @@ NSString* getUDID()
 
 + (instancetype) sharedInstance;
 
++(BOOL) toggleValue;
+
 // Registers a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
 - (void) registerDelegate:(id)delegate;
 // Deregisters a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
