@@ -1,26 +1,12 @@
-#import <objc/runtime.h>
-#import <UIKit/UIKit.h>
-#import <AVFoundation/AVFoundation.h>
-#import <substrate.h>
-//#import <CommonCrypto/CommonCrypto.h>
-#import <Security/Security.h>
+// MobileGestalt stuff for UDID
+extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
 
-BOOL isUsingAction = NO;
-BOOL isLockedUnsecure = NO;
-BOOL hasShownAlert = NO;
-BOOL isFirstUnlock = YES;
-BOOL tweakEnabled = NO;
-BOOL isPasscodeForced = YES;
-BOOL prefsFileIsGood = NO;
-BOOL deviceCodeIsOn = YES;
-BOOL isLocked = YES;
-BOOL isToggled = NO;
-BOOL registered_toggleAction = NO;
-BOOL registered_ttpAction = NO;
-BOOL registered_bypassAction = NO;
-//NSString *passCode = nil;
-
-
+// returns the device's UDID. Because we are in SpringBoard this works
+NSString* getUDID()
+{
+    NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
+    return udid;
+}
 
 @interface SBUserAgent
 - (void)lockAndDimDevice;
@@ -33,33 +19,12 @@ BOOL registered_bypassAction = NO;
 + (id)sharedController;
 - (BOOL)deviceHasPasscodeSet;
 @end
+
 @interface SBLockScreenManager
 - (BOOL)attemptUnlockWithPasscode:(id)fp8;
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12;
 - (void)unlockUIFromSource:(int)fp8 withOptions:(id)fp12;
 - (BOOL)isUILocked;
-@end
-
-@interface SBLockScreenView
-- (void)scrollViewDidScroll:(id)fp8;
-- (void)setPasscodeView:(id)fp8;
-- (id)initWithFrame:(struct CGRect)fp8;
-- (void)_layoutPasscodeView;
-- (void)willMoveToWindow:(id)fp8;
-@end
-
-@interface SBLockScreenViewController
--(BOOL)isPasscodeLockVisible;
-@end
-
-@interface SpringBoard
-- (void)relaunchSpringBoard;
-@end
-
-@interface DevicePINController
-
-- (void)setOldPassword:(id)arg1;
-
 @end
 
 @interface BBBulletinRequest : NSObject
@@ -73,41 +38,22 @@ BOOL registered_bypassAction = NO;
 - (void)observer:(id)observer addBulletin:(BBBulletinRequest *)bulletin forFeed:(int)feed;
 @end
 
-
-
-
-
-
 @protocol libPassEvents <NSObject>
 @optional
-
 -(void)passwordWasEntered:(NSString *)password;
-
 @end
 
-
-@interface libPass : NSObject <libPassEvents> {
-
-	id <libPassEvents> delegate;
-
-}
+@interface libPass : NSObject <libPassEvents> 
 @property (retain) id delegate;
-+(void)passwordWasEnteredHandler:(NSString *)password;
-//+ (void)passwordEntered:(NSString *)password;
-+ (void)togglePasscode;
-+ (BOOL)toggleValue;
-+(void)setPasscodeToggle:(BOOL)enabled;
-+ (BOOL)isPasscodeEntered;
-//+ (BOOL)checkPrefsFileIsGood;
-//+ (NSDictionary *)libPassPrefs;
-+ (BOOL)isPasscodeForced;
-+ (void)setIsPasscodeForced:(BOOL)value;
-//Event can be "unlockEvent", "toggleEvent", or "lockEvent", respectively.
-//The tweak won't register your actions without using this
-+(void)registerForEvent:(NSString *)event fromSender:(NSString *)sender;
-+(void)unlockWithCodeEnabled:(BOOL)enabled;
-+(void)lockWithCodeEnabled:(BOOL)enabled;
-+(void)respringAfterDelay:(int)seconds;
+// This is probably a really bad idea...
+@property (nonatomic, retain) NSString* devicePasscode;
+@property (nonatomic) BOOL isPasscodeOn;
 
-//@property (nonatomic) BOOL isPasscodeForced;
++ (instancetype) sharedInstance;
+
+- (void)passwordWasEnteredHandler:(NSString *)password;
+- (void)togglePasscode;
+- (void)setPasscodeToggle:(BOOL)enabled;
+- (void)unlockWithCodeEnabled:(BOOL)enabled;
+- (void)lockWithCodeEnabled:(BOOL)enabled;
 @end
