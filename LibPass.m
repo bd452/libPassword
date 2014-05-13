@@ -20,6 +20,8 @@
 - (id) init
 {
     delegates = [[NSMutableArray alloc] init];
+    self.isPasscodeOn = YES;
+    self.devicePasscode = nil;
     return [super init];
 }
 
