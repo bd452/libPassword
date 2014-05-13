@@ -1,12 +1,20 @@
-#define _LIBPASS_INTERNAL
 #import "libPass.h"
-#undef _LIBPASS_INTERNAL
 #import "headers.h"
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <substrate.h>
 #import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
+
+// MobileGestalt stuff for UDID
+extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
+
+// returns the device's UDID. Because we are in SpringBoard this works
+NSString* getUDID()
+{
+    NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
+    return udid;
+}
 
 %hook SBLockScreenViewControllerBase
 - (void)_transitionWallpaperFromLock {

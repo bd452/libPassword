@@ -1,15 +1,4 @@
 #import "headers.h"
-#ifdef _LIBPASS_INTERNAL
-// MobileGestalt stuff for UDID
-extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
-
-// returns the device's UDID. Because we are in SpringBoard this works
-NSString* getUDID()
-{
-    NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
-    return udid;
-}
-#endif
 
 @protocol LibPassDelegate <NSObject>
 @optional
