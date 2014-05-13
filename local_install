@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mkdir -p $THEOS/include/libPass
+cp libPass.h $THEOS/include/libPass/libPass.h
+cp .theos/obj/libPass.dylib $THEOS/lib

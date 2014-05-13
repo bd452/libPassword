@@ -1,3 +1,4 @@
+#ifdef _LIBPASS_INTERNAL
 // MobileGestalt stuff for UDID
 extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
 
@@ -7,6 +8,7 @@ NSString* getUDID()
     NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
     return udid;
 }
+#endif
 
 @interface SBUserAgent
 - (void)lockAndDimDevice;
@@ -50,20 +52,28 @@ NSString* getUDID()
 {
     NSMutableArray *delegates;
 }
-
-@property (retain) id delegate;
 // This is probably a really, really bad idea...
 @property (nonatomic, retain) NSString* devicePasscode;
 @property (nonatomic) BOOL isPasscodeOn;
 
 + (instancetype) sharedInstance;
 
++(BOOL) toggleValue;
+
+// Registers a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
 - (void) registerDelegate:(id)delegate;
+// Deregisters a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
 - (void) deregisterDelegate:(id)delegate;
 - (BOOL) shouldAllowPasscode:(NSString*)passcode;
 - (void) passwordWasEnteredHandler:(NSString *)password;
+// Toggles whether the passcode should be temporarily bypassed
 - (void) togglePasscode;
+// Sets whether the passcode should be temporarily bypassed
 - (void) setPasscodeToggle:(BOOL)enabled;
+// Unlocks, bypassing the passcode if 'enabled' is YES
 - (void) unlockWithCodeEnabled:(BOOL)enabled;
+// Locks, setting the passcodeToggle to the enabled flag
 - (void) lockWithCodeEnabled:(BOOL)enabled;
 @end
+
+

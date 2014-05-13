@@ -1,3 +1,4 @@
+#define _LIBPASS_INTERNAL
 #import "libPass.h"
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
@@ -6,14 +7,20 @@
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
 @implementation LibPass
-
 + (id) sharedInstance
 {
+    // This (helps) prevent multiple instances from being created which would cause issues
     static LibPass *instance;
     if (!instance)
         instance = [[LibPass alloc] init];
         
     return instance;
+}
+
+// Retained for backwards compatibility. PLEASE do not use AT ALL if possible...
++(BOOL) toggleValue
+{
+    return ![LibPass sharedInstance].isPasscodeOn;
 }
 
 - (id) init
@@ -65,6 +72,9 @@
 
 - (void)togglePasscode {
 	self.isPasscodeOn = !self.isPasscodeOn;
+    
+    // This shows a banner notification to the user
+    // letting them know what status the passcode is in right now.
 
 	Class bulletinBannerController = objc_getClass("SBBulletinBannerController");
 	Class bulletinRequest = objc_getClass("BBBulletinRequest");
@@ -100,6 +110,9 @@
     }
 }
 
+// This is used when unlocking the device and isPasscodeOn == YES to allow for 
+// multiple passcode to be used and the like.
+// This opens the door to a large variety of possibilities.
 - (BOOL) shouldAllowPasscode:(NSString*)passcode
 {
     BOOL result = passcode == self.devicePasscode;;
@@ -177,21 +190,27 @@
         // Passcode should be bypassed (no matter what)
         result = %orig([LibPass sharedInstance].devicePasscode, arg2);
     }
-    //BOOL result = %orig([LibPass sharedInstance].isPasscodeOn ? arg1 : [LibPass sharedInstance].devicePasscode, arg2);
+
+    // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
+    // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
+    if ([arg1 isKindOfClass:[NSString class]])
+        [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
+    else
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[LibPass sharedInstance].devicePasscode];
 
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
         prefs = [[NSMutableDictionary alloc] init];
 
-    if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"devicePasscode"] isKindOfClass:[NSData class]] && result)
+    if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"savedPasscode"] isKindOfClass:[NSData class]] && result)
     {
         [LibPass sharedInstance].devicePasscode = arg1;
-        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
-    else if ([prefs[@"devicePasscode"] isKindOfClass:[NSData class]])
+    else if ([prefs[@"savedPasscode"] isKindOfClass:[NSData class]])
     {
-        NSData *passcodeData = [prefs[@"devicePasscode"] AES256DecryptWithKey:getUDID()];
+        NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
         [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
             
         if (result)
@@ -199,13 +218,13 @@
             if ([LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
             {
                 [LibPass sharedInstance].devicePasscode = arg1;
-                [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+                [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
                 [prefs writeToFile:SETTINGS_FILE atomically:YES];
             }
         }
     }
         
-    if (![prefs[@"devicePasscode"] isKindOfClass:[NSData class]])// no passcode stored
+    if (![prefs[@"savedPasscode"] isKindOfClass:[NSData class]])// no passcode stored
     {
         UIAlertView *alert = [[UIAlertView alloc]
             initWithTitle:@"libPass"
@@ -225,7 +244,7 @@
         if (!prefs)
             prefs = [[NSMutableDictionary alloc] init];
         [LibPass sharedInstance].devicePasscode = arg1;
-        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
 
@@ -237,6 +256,9 @@
 %hook SBUserAgent
 - (BOOL)deviceIsPasscodeLocked 
 {
+    // If the passcode should be bypassed return NO.
+    // Otherwise, return the default value
+
 	if ([LibPass sharedInstance].isPasscodeOn == NO)
 		return NO;
 	else
@@ -247,7 +269,7 @@
 %ctor
 {
 	NSDictionary *prefs = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-    if ([prefs objectForKey:@"savedPasscode"] != nil)
+    if (prefs && [prefs objectForKey:@"savedPasscode"] != nil)
     {
         NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
         [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];

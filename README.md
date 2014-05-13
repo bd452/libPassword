@@ -7,9 +7,10 @@ This is working, but there are a few issues. I can use all the help I can get, a
 
 Things that are broken:
 
-  - TouchID
-  - Passcode Lock Delay
+  - TouchID (fixed)
+  - Passcode Lock Delay (apparently fixed)
   - Switcher Animations (I've never had it happen but apparently it does)
+  - When using lockWithCodeEnabled:NO and then turning on, the passcode entry screen is still visible (maybe on scrollToPage:0 unlock?)
 
 Things that are working:
 
