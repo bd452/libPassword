@@ -35,11 +35,19 @@ NSString* getUDID()
 %hook SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
     BOOL result;
+
+    // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
+    // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
+    if ([arg1 isKindOfClass:[NSString class]])
+        [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
+    else
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[LibPass sharedInstance].devicePasscode];
+
     if ([LibPass sharedInstance].isPasscodeOn)
     {
         // Passcode should not be arbitrarily bypassed, but we can still run checks
         result = %orig;
-        
+
         if (!result && [arg1 isKindOfClass:[NSString class]] && [[LibPass sharedInstance] shouldAllowPasscode:arg1])
         {
             // Passcode is not the system passcode but it should still be allowed access
@@ -57,15 +65,11 @@ NSString* getUDID()
     else
     {
         // Passcode should be bypassed (no matter what)
-        result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+        if ([LibPass sharedInstance].devicePasscode)
+            result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+        else
+            result = %orig; // No device passcode stored
     }
-
-    // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
-    // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
-    if ([arg1 isKindOfClass:[NSString class]])
-        [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
-    else
-        [[LibPass sharedInstance] passwordWasEnteredHandler:[LibPass sharedInstance].devicePasscode];
 
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
@@ -92,29 +96,28 @@ NSString* getUDID()
             }
         }
     }
-        
-    if (![prefs[@"savedPasscode"] isKindOfClass:[NSData class]])// no passcode stored
+    else
     {
-        UIAlertView *alert = [[UIAlertView alloc]
-            initWithTitle:@"libPass"
-            message:@"No device passcode stored. Please unlock the device with your passcode."
-            delegate:nil
-            cancelButtonTitle:@"OK"
-            otherButtonTitles:nil];
-        [alert show];
-    }
-    else if (result && [LibPass sharedInstance].devicePasscode != nil && [LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
-    {
-        // Basically here are the checks:
-        // 1. arg1 actually is correct and a NSString
-        // 2. arg1 != an existing stored passcode
+        if (![prefs[@"savedPasscode"] isKindOfClass:[NSData class]])// no passcode stored
+        {
+            UIAlertView *alert = [[UIAlertView alloc]
+                initWithTitle:@"LibPass"
+                message:@"No device passcode stored. Please unlock the device with your passcode."
+                delegate:nil
+                cancelButtonTitle:@"OK"
+                otherButtonTitles:nil];
+            [alert show];
+        }
+        else if (result && [LibPass sharedInstance].devicePasscode != nil && [LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
+        {
+            // Basically here are the checks:
+            // 1. arg1 actually is correct and a NSString
+            // 2. arg1 != an existing stored passcode
 
-        NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-        if (!prefs)
-            prefs = [[NSMutableDictionary alloc] init];
-        [LibPass sharedInstance].devicePasscode = arg1;
-        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
-        [prefs writeToFile:SETTINGS_FILE atomically:YES];
+            [LibPass sharedInstance].devicePasscode = arg1;
+            [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
+            [prefs writeToFile:SETTINGS_FILE atomically:YES];
+        }
     }
 
     return result;
