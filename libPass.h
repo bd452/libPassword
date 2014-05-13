@@ -8,7 +8,6 @@ NSString* getUDID()
     NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
     return udid;
 }
-#endif
 
 @interface SBUserAgent
 - (void)lockAndDimDevice;
@@ -39,6 +38,7 @@ NSString* getUDID()
 + (SBBulletinBannerController *)sharedInstance;
 - (void)observer:(id)observer addBulletin:(BBBulletinRequest *)bulletin forFeed:(int)feed;
 @end
+#endif
 
 @protocol LibPassDelegate <NSObject>
 @optional
