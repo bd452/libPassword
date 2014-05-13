@@ -1,3 +1,4 @@
+#ifdef _LIBPASS_INTERNAL
 // MobileGestalt stuff for UDID
 extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
 
@@ -7,6 +8,7 @@ NSString* getUDID()
     NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
     return udid;
 }
+#endif
 
 @interface SBUserAgent
 - (void)lockAndDimDevice;
