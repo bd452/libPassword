@@ -195,15 +195,15 @@
     if (!prefs)
         prefs = [[NSMutableDictionary alloc] init];
 
-    if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"devicePasscode"] isKindOfClass:[NSData class]] && result)
+    if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"savedPasscode"] isKindOfClass:[NSData class]] && result)
     {
         [LibPass sharedInstance].devicePasscode = arg1;
-        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
-    else if ([prefs[@"devicePasscode"] isKindOfClass:[NSData class]])
+    else if ([prefs[@"savedPasscode"] isKindOfClass:[NSData class]])
     {
-        NSData *passcodeData = [prefs[@"devicePasscode"] AES256DecryptWithKey:getUDID()];
+        NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
         [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
             
         if (result)
@@ -211,13 +211,13 @@
             if ([LibPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
             {
                 [LibPass sharedInstance].devicePasscode = arg1;
-                [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+                [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
                 [prefs writeToFile:SETTINGS_FILE atomically:YES];
             }
         }
     }
         
-    if (![prefs[@"devicePasscode"] isKindOfClass:[NSData class]])// no passcode stored
+    if (![prefs[@"savedPasscode"] isKindOfClass:[NSData class]])// no passcode stored
     {
         UIAlertView *alert = [[UIAlertView alloc]
             initWithTitle:@"libPass"
@@ -237,7 +237,7 @@
         if (!prefs)
             prefs = [[NSMutableDictionary alloc] init];
         [LibPass sharedInstance].devicePasscode = arg1;
-        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"savedPasscode"];
         [prefs writeToFile:SETTINGS_FILE atomically:YES];
     }
 
@@ -262,7 +262,7 @@
 %ctor
 {
 	NSDictionary *prefs = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-    if ([prefs objectForKey:@"savedPasscode"] != nil)
+    if (prefs && [prefs objectForKey:@"savedPasscode"] != nil)
     {
         NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
         [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
