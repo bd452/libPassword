@@ -38,12 +38,12 @@ NSString* getUDID()
 - (void)observer:(id)observer addBulletin:(BBBulletinRequest *)bulletin forFeed:(int)feed;
 @end
 
-@protocol libPassEvents <NSObject>
+@protocol LibPassDelegate <NSObject>
 @optional
 -(void)passwordWasEntered:(NSString *)password;
 @end
 
-@interface libPass : NSObject <libPassEvents> 
+@interface LibPass : NSObject
 @property (retain) id delegate;
 // This is probably a really bad idea...
 @property (nonatomic, retain) NSString* devicePasscode;
