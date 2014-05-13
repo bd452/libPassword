@@ -1,83 +1,45 @@
 #import "libPass.h"
+#import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
 @implementation libPass
 
-+(void)unlockWithCodeEnabled:(BOOL)enabled {
-	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:SETTINGS_FILE];
-	//[prefs release];
-	if (fileExists) {
-        if ([passCode isEqual:@""]) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
-            // optional - add more buttons:
-            [alert show];
-            enabled = YES;
-        }
++ (id) sharedInstance
+{
+    static libPass *instance;
+    if (!instance)
+        instance = [[libPass alloc] init];
         
-        if (enabled) {
-            [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] unlockUIFromSource:1 withOptions:nil];
-        }
-        else
-        {
-            isUsingAction = YES;
-            [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",decodedString]];
-        }
+    return instance;
+}
+
+- (void)unlockWithCodeEnabled:(BOOL)enabled 
+{
+    if (enabled) {
+        [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] unlockUIFromSource:1 withOptions:nil];
     }
-	else if (!fileExists){
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
-		// optional - add more buttons:
-		[alert show];
-		enabled = YES;
-	}
+    else
+    {
+        [self setPasscodeToggle:NO];
+        [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];
+    }
 }
 
-+ (BOOL)isPasscodeEntered {
-	return [passCode isEqual:@""];
+- (void)lockWithCodeEnabled:(BOOL)enabled
+{
+    if ([self.devicePasscode isEqual:@""]) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
+        [alert show];
+        return;
+    }
+
+    [(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
+    [self setPasscodeToggle:enabled];
 }
 
-+ (void)lockWithCodeEnabled:(BOOL)enabled {
-	NSLog(@"Lock with code enabled: %d", enabled);
-	BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:SETTINGS_FILE];
-	if (fileExists) {
-		if ([passCode isEqual:@""]) {
-			UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
-			// optional - add more buttons:
-			[alert show];
-			enabled = YES;
-		}
+- (void)togglePasscode {
+	self.isPasscodeOn = !self.isPasscodeOn;
 
-        [(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
-        isLockedUnsecure = !enabled;
-	}
-	else if (!fileExists){
-		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"libPass" message:@"Please put a password into the libPassword preferences pane before using a libPass-enabled tweak" delegate:self cancelButtonTitle:@"Yes Sir!" otherButtonTitles:nil];
-		// optional - add more buttons:
-		[alert show];
-		enabled = YES;
-	}
-}
-
-+ (BOOL)isPasscodeForced {
-    return isPasscodeForced;
-}
-
-+(void)respringAfterDelay:(int)seconds {
-    // What is the point of this function?
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, seconds * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-		system("killall -9 backboardd");
-	});
-}
-
-+ (void)setIsPasscodeForced:(BOOL)value {
-	isPasscodeForced = value;
-}
-
-+ (void)togglePasscode {
-	isToggled = !isToggled;
-	NSLog(@"Passcode Toggling");
-    
-    // Unsure what this does.
-    // I think it shows an alert saying whether the passcode was enabled/disabled
 	Class bulletinBannerController = objc_getClass("SBBulletinBannerController");
 	Class bulletinRequest = objc_getClass("BBBulletinRequest");
     
@@ -85,7 +47,7 @@
 		BBBulletinRequest *request = [[bulletinRequest alloc] init];
 		request.title = @"Password";
 		NSString *passcodeEnabledString;
-		if (!isToggled)
+		if ([libPass sharedInstance].isPasscodeOn)
             passcodeEnabledString = @"enabled";
 		else
             passcodeEnabledString = @"disabled";
@@ -96,35 +58,15 @@
 	}
 
 }
-+(BOOL)toggleValue {
-	return isToggled;
-}
 
-+(void)setPasscodeToggle:(BOOL)enabled
+-(void)setPasscodeToggle:(BOOL)enabled
 {
-	isToggled = enabled;
+	self.isPasscodeOn = enabled;
 }
 
-+(void)passwordWasEnteredHandler:(NSString *)password {
-    // It would be surprising if this actually did anything...
-	[[[[self alloc]init] delegate] passwordWasEntered:password];
-}
-
-+(void)registerForEvent:(NSString *)event fromSender:(NSString *)sender {
-	if ([event isEqual:@"unlockEvent"]) {
-		registered_bypassAction = YES;
-	}
-	if ([event isEqual:@"toggleEvent"]) {
-		registered_toggleAction = YES;
-	}
-	if ([event isEqual:@"lockEvent"]) {
-		registered_ttpAction = YES;
-	}
-	else {
-		NSLog(@"You tried to register a libPassword event that doesn't exist: %@", event);
-	}
-    
-    
+-(void)passwordWasEnteredHandler:(NSString *)password {
+    if (self.delegate)
+        [self.delegate passwordWasEntered:password];
 }
 @end
 
@@ -134,67 +76,95 @@
 
 %hook SBLockScreenViewControllerBase
 - (void)_transitionWallpaperFromLock {
-	if (isLockedUnsecure) {
-		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",decodedString]];
+	if ([libPass sharedInstance].isPasscodeOn == NO) {
+		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[libPass sharedInstance].devicePasscode]];
 	}
 	%orig;
 }
 %end
 
 %hook SBLockScreenManager
-
--(BOOL)isUILocked {
-	isLocked = %orig;
-	NSLog(@"SBLock Screen Manager: %d", %orig);
-	return %orig;
-}
-
-- (void)unlockUIFromSource:(int)fp8 withOptions:(id)fp12 {
-	isUsingAction = NO;
-	%log;
-	%orig;
-}
-
 - (BOOL)attemptUnlockWithPasscode:(id)fp8 {
     
     %orig;
-	[libPass passwordWasEnteredHandler:fp8];
-	if (isUsingAction || isLockedUnsecure || isToggled) {
-		return 	[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",decodedString]];
+	[[libPass sharedInstance] passwordWasEnteredHandler:fp8];
+	if ([libPass sharedInstance].isPasscodeOn == NO)
+    {
+		return 	[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[libPass sharedInstance].devicePasscode]];
 	}
     return %orig;
 }
 
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
-	[libPass setIsPasscodeForced:NO];
-    isLockedUnsecure = NO;
+	[[libPass sharedInstance] setPasscodeToggle:YES];
 	%orig;
 }
 
 %end
 
 %hook SBDeviceLockController
-- (BOOL)attemptDeviceUnlockWithPassword:(id)fp8 appRequested:(BOOL)fp12 {
-    NSLog(@"attempt device unlock with password %d", %orig);
-	if (isUsingAction || isLockedUnsecure || isToggled) {
-		fp8 = [NSString stringWithFormat:@"%@",decodedString];
-	}
-	return %orig;
-}
+- (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
+    BOOL result = %orig([libPass sharedInstance].isPasscodeOn ? arg1 : [libPass sharedInstance].devicePasscode, arg2);
 
--(BOOL)deviceHasPasscodeSet {
-	deviceCodeIsOn = %orig;
-	NSLog(@"SBDevice Lock Controller: %d", %orig);
-	return %orig;
+    NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
+    if (!prefs)
+        prefs = [[NSMutableDictionary alloc] init];
+
+    if ([arg1 isKindOfClass:[NSString class]] && ![prefs[@"devicePasscode"] isKindOfClass:[NSData class]] && result)
+    {
+        [libPass sharedInstance].devicePasscode = arg1;
+        [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+        [prefs writeToFile:SETTINGS_FILE atomically:YES];
+    }
+    else if ([prefs[@"devicePasscode"] isKindOfClass:[NSData class]])
+    {
+        NSData *passcodeData = [prefs[@"devicePasscode"] AES256DecryptWithKey:getUDID()];
+        [libPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
+            
+        if (result)
+        {
+            if ([libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
+            {
+                [libPass sharedInstance].devicePasscode = arg1;
+                [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+                [prefs writeToFile:SETTINGS_FILE atomically:YES];
+            }
+        }
+    }
+        
+    if (![prefs[@"devicePasscode"] isKindOfClass:[NSData class]])// no passcode stored
+    {
+        UIAlertView *alert = [[UIAlertView alloc]
+            initWithTitle:@"Appellancy"
+            message:@"No device passcode stored. Please unlock the device with your passcode."
+            delegate:nil
+            cancelButtonTitle:@"OK"
+            otherButtonTitles:nil];
+        [alert show];
+    }
+    else
+    {
+        if (result && [libPass sharedInstance].devicePasscode != nil && [libPass sharedInstance].devicePasscode != arg1 && [arg1 isKindOfClass:[NSString class]])
+        {
+            NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
+            if (!prefs)
+                prefs = [[NSMutableDictionary alloc] init];
+            [libPass sharedInstance].devicePasscode = arg1;
+            [prefs setObject:[[arg1 dataUsingEncoding:NSUTF8StringEncoding] AES256EncryptWithKey:getUDID()] forKey:@"devicePasscode"];
+            [prefs writeToFile:SETTINGS_FILE atomically:YES];
+        }
+    }
+
+
+    return result;
 }
 
 %end
 
 %hook SBUserAgent
 - (BOOL)deviceIsPasscodeLocked {
-    
 	NSLog(@"SBUserAgent deviceIsPasscodeLocked: %d", %orig);
-	if (isLockedUnsecure || isToggled) {
+	if ([libPass sharedInstance].isPasscodeOn == NO) {
 		NSLog(@"device is NOT passcode locked");
 		return NO;
 	}
@@ -208,7 +178,9 @@
 %ctor
 {
 	NSDictionary *prefs=[[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-	passCode = [NSString stringWithFormat:@"%@",[prefs objectForKey:@"savedPasscode"]];
-	NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[prefs objectForKey:@"savedPasscode"] options:0];
-	decodedString = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+    if ([prefs objectForKey:@"savedPasscode"] != nil)
+    {
+        NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
+        [libPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];
+    }
 }

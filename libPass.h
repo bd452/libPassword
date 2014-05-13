@@ -5,38 +5,9 @@
 //#import <CommonCrypto/CommonCrypto.h>
 #import <Security/Security.h>
 
-BOOL isUsingAction = NO;
-BOOL isLockedUnsecure = NO;
-BOOL hasShownAlert = NO;
-BOOL isFirstUnlock = YES;
-BOOL tweakEnabled = NO;
-BOOL isPasscodeForced = YES;
-BOOL prefsFileIsGood = NO;
-BOOL deviceCodeIsOn = YES;
-BOOL isLocked = YES;
-BOOL isToggled = NO;
-BOOL registered_toggleAction = NO;
-BOOL registered_ttpAction = NO;
-BOOL registered_bypassAction = NO;
-NSString *passCode = nil;
-NSString *decodedString = nil;
-
 NSString* getUDID()
 {
     return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    
-    //CFStringRef uniqueIdentifier = MGCopyAnswer(CFSTR("UniqueDeviceID"));
-    //return (NSString*)uniqueIdentifier;
-    
-    /*NSString *retVal = nil;
-     CFTypeRef tmp = MGCopyAnswer(CFSTR("UniqueDeviceID"));
-     if (tmp) {
-     //retVal = [NSString stringWithString:tmp];
-     NSData *resultData = CFBridgingRelease(tmp);
-     retVal = [[NSString alloc] initWithData:resultData encoding:NSUTF8StringEncoding];
-     CFRelease(tmp);
-     }
-     return retVal;*/
 }
 
 @interface SBUserAgent
@@ -73,10 +44,6 @@ NSString* getUDID()
 - (void)relaunchSpringBoard;
 @end
 
-@interface DevicePINController
-- (void)setOldPassword:(id)arg1;
-@end
-
 @interface BBBulletinRequest : NSObject
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *message;
@@ -95,17 +62,14 @@ NSString* getUDID()
 
 @interface libPass : NSObject <libPassEvents> 
 @property (retain) id delegate;
-+(void)passwordWasEnteredHandler:(NSString *)password;
-+ (void)togglePasscode;
-+ (BOOL)toggleValue;
-+(void)setPasscodeToggle:(BOOL)enabled;
-+ (BOOL)isPasscodeEntered;
-+ (BOOL)isPasscodeForced;
-+ (void)setIsPasscodeForced:(BOOL)value;
-//Event can be "unlockEvent", "toggleEvent", or "lockEvent", respectively.
-//The tweak won't register your actions without using this
-+(void)registerForEvent:(NSString *)event fromSender:(NSString *)sender;
-+(void)unlockWithCodeEnabled:(BOOL)enabled;
-+(void)lockWithCodeEnabled:(BOOL)enabled;
-+(void)respringAfterDelay:(int)seconds;
+@property (nonatomic, retain) NSString* devicePasscode;
+@property (nonatomic) BOOL isPasscodeOn;
+
++ (instancetype) sharedInstance;
+
+- (void)passwordWasEnteredHandler:(NSString *)password;
+- (void)togglePasscode;
+- (void)setPasscodeToggle:(BOOL)enabled;
+- (void)unlockWithCodeEnabled:(BOOL)enabled;
+- (void)lockWithCodeEnabled:(BOOL)enabled;
 @end
