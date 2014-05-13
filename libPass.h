@@ -40,7 +40,9 @@ NSString* getUDID()
 
 @protocol LibPassDelegate <NSObject>
 @optional
+// Used to allow basic detection of different passcodes
 -(void)passwordWasEntered:(NSString*)password;
+// Used during shouldAllowPasscode: to check if the passcode is "correct"
 -(BOOL)shouldAllowPasscode:(NSString*)password;
 @end
 
@@ -56,6 +58,8 @@ NSString* getUDID()
 
 + (instancetype) sharedInstance;
 
+- (void) registerDelegate:(id)delegate;
+- (void) deregisterDelegate:(id)delegate;
 - (BOOL) shouldAllowPasscode:(NSString*)passcode;
 - (void) passwordWasEnteredHandler:(NSString *)password;
 - (void) togglePasscode;
