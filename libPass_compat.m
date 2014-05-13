@@ -57,7 +57,7 @@
 + (void)respringAfterDelay:(int)seconds
 {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, seconds * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-		system("killall backboardd");
+		system("killall -9 backboardd");
 	});
 }
 
