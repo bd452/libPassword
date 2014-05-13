@@ -177,7 +177,13 @@
         // Passcode should be bypassed (no matter what)
         result = %orig([LibPass sharedInstance].devicePasscode, arg2);
     }
-    //BOOL result = %orig([LibPass sharedInstance].isPasscodeOn ? arg1 : [LibPass sharedInstance].devicePasscode, arg2);
+
+    // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
+    // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
+    if ([arg1 isKindOfClass:[NSString class]])
+        [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
+    else
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[LibPass sharedInstance].devicePasscode];
 
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
