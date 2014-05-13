@@ -51,6 +51,7 @@ NSString* getUDID()
 
 @interface libPass : NSObject <libPassEvents> 
 @property (retain) id delegate;
+// This is probably a really bad idea...
 @property (nonatomic, retain) NSString* devicePasscode;
 @property (nonatomic) BOOL isPasscodeOn;
 
