@@ -2,7 +2,6 @@
 	Filter = {
 		Bundles = (
 			"com.apple.springboard",
-			"com.apple.preferences-framework",
 		);
 	};
 }
