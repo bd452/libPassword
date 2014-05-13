@@ -40,7 +40,8 @@ NSString* getUDID()
 
 @protocol LibPassDelegate <NSObject>
 @optional
--(void)passwordWasEntered:(NSString *)password;
+-(void)passwordWasEntered:(NSString*)password;
+-(BOOL)shouldAllowPasscode:(NSString*)password;
 @end
 
 @interface LibPass : NSObject
@@ -55,9 +56,10 @@ NSString* getUDID()
 
 + (instancetype) sharedInstance;
 
-- (void)passwordWasEnteredHandler:(NSString *)password;
-- (void)togglePasscode;
-- (void)setPasscodeToggle:(BOOL)enabled;
-- (void)unlockWithCodeEnabled:(BOOL)enabled;
-- (void)lockWithCodeEnabled:(BOOL)enabled;
+- (BOOL) shouldAllowPasscode:(NSString*)passcode;
+- (void) passwordWasEnteredHandler:(NSString *)password;
+- (void) togglePasscode;
+- (void) setPasscodeToggle:(BOOL)enabled;
+- (void) unlockWithCodeEnabled:(BOOL)enabled;
+- (void) lockWithCodeEnabled:(BOOL)enabled;
 @end

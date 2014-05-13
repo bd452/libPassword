@@ -93,12 +93,28 @@
 -(void)passwordWasEnteredHandler:(NSString *)password {
     for (id delegate in delegates)
     {
-        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)])
+        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(passwordWasEntered:)])
         {
             [delegate passwordWasEntered:password];
         }
     }
 }
+
+- (BOOL) shouldAllowPasscode:(NSString*)passcode
+{
+    BOOL result = passcode == self.devicePasscode;;
+    
+    for (id delegate in delegates)
+    {
+        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(shouldAllowPasscode:)])
+        {
+            [delegate shouldAllowPasscode:passcode];
+        }
+    }
+
+    return result;
+}
+
 @end
 
 // *****************************************************************************
@@ -115,15 +131,18 @@
 %end
 
 %hook SBLockScreenManager
-- (BOOL)attemptUnlockWithPasscode:(id)fp8 {
-    %orig;
-
+- (BOOL)attemptUnlockWithPasscode:(id)fp8
+{
+    // This may all be redundant (see [SBDeviceLockController attemptDeviceUnlockWithPassword:appRequested:])
+    /*
 	[[LibPass sharedInstance] passwordWasEnteredHandler:fp8];
 
 	if ([LibPass sharedInstance].isPasscodeOn == NO)
     {
 		return 	%orig([LibPass sharedInstance].devicePasscode);
 	}
+    */
+
     return %orig;
 }
 
@@ -136,7 +155,29 @@
 
 %hook SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
-    BOOL result = %orig([LibPass sharedInstance].isPasscodeOn ? arg1 : [LibPass sharedInstance].devicePasscode, arg2);
+    BOOL result;
+    if ([LibPass sharedInstance].isPasscodeOn)
+    {
+        // Passcode should not be arbitrarily bypassed, but we can still run checks
+        result = %orig;
+        
+        if (!result && [arg1 isKindOfClass:[NSString class]] && [[LibPass sharedInstance] shouldAllowPasscode:arg1])
+        {
+            // Passcode is not the system passcode but it should still be allowed access
+            // For example, something like TimePasscode could be possible by registering a delegate to return YES
+            // if the entered passcode is the correct TP passcode. LibPassword will then perform a %orig using the system 
+            // passcode (which should be granted access), not always bypassing the passcode but allowing for 
+            // more than passcode to be "correct"
+            
+            result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+        }
+    }
+    else
+    {
+        // Passcode should be bypassed (no matter what)
+        result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+    }
+    //BOOL result = %orig([LibPass sharedInstance].isPasscodeOn ? arg1 : [LibPass sharedInstance].devicePasscode, arg2);
 
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
