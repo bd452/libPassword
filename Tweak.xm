@@ -1,4 +1,7 @@
 #import "libPass.h"
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+#import <substrate.h>
 #import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 

@@ -1,10 +1,3 @@
-#import <objc/runtime.h>
-#import <UIKit/UIKit.h>
-#import <AVFoundation/AVFoundation.h>
-#import <substrate.h>
-//#import <CommonCrypto/CommonCrypto.h>
-#import <Security/Security.h>
-
 // MobileGestalt stuff for UDID
 extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
 
@@ -26,6 +19,7 @@ NSString* getUDID()
 + (id)sharedController;
 - (BOOL)deviceHasPasscodeSet;
 @end
+
 @interface SBLockScreenManager
 - (BOOL)attemptUnlockWithPasscode:(id)fp8;
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12;
