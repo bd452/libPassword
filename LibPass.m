@@ -122,4 +122,9 @@
     return result;
 }
 
+-(BOOL) toggleValue
+{
+    return !self.isPasscodeOn;
+}
+
 @end

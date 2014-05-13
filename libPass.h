@@ -18,7 +18,7 @@
 
 + (instancetype) sharedInstance;
 
-// Registers a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
+// Registers a delegate for either shouldAllowPasscode and/or passwordWasEnteredHandler
 - (void) registerDelegate:(id)delegate;
 // Deregisters a delegate for eitehr shouldAllowPasscode and/or passwordWasEnteredHandler
 - (void) deregisterDelegate:(id)delegate;
@@ -32,6 +32,8 @@
 - (void) unlockWithCodeEnabled:(BOOL)enabled;
 // Locks, setting the passcodeToggle to the enabled flag
 - (void) lockWithCodeEnabled:(BOOL)enabled;
+// Returns whether the passcode is enabled/disabled
+- (BOOL) toggleValue;
 @end
 
 
