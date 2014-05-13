@@ -1,138 +1,20 @@
-#define _LIBPASS_INTERNAL
 #import "libPass.h"
+#import "headers.h"
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <substrate.h>
 #import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
 
-@implementation LibPass
-+ (id) sharedInstance
+// MobileGestalt stuff for UDID
+extern "C" CFPropertyListRef MGCopyAnswer(CFStringRef property);
+
+// returns the device's UDID. Because we are in SpringBoard this works
+NSString* getUDID()
 {
-    // This (helps) prevent multiple instances from being created which would cause issues
-    static LibPass *instance;
-    if (!instance)
-        instance = [[LibPass alloc] init];
-        
-    return instance;
+    NSString *udid = (__bridge NSString*)MGCopyAnswer(CFSTR("UniqueDeviceID"));
+    return udid;
 }
-
-// Retained for backwards compatibility. PLEASE do not use AT ALL if possible...
-+(BOOL) toggleValue
-{
-    return ![LibPass sharedInstance].isPasscodeOn;
-}
-
-- (id) init
-{
-    delegates = [[NSMutableArray alloc] init];
-    return [super init];
-}
-
--(BOOL) isDelegateRegistered:(id)delegate
-{
-    return [delegates indexOfObject:delegate] != NSNotFound;
-}
-
--(void) registerDelegate:(id)delegate
-{
-    if ([self isDelegateRegistered:delegate] || delegate == nil)
-        return;
-    
-    [delegates addObject:delegate];
-}
--(void) deregisterDelegate:(id)delegate
-{
-    if (![self isDelegateRegistered:delegate] || delegate == nil)
-        return;
-
-    NSUInteger num = [delegates indexOfObject:delegate];
-    if (NSNotFound == num)
-        return;
-    [delegates removeObjectAtIndex:num];
-}
-
-- (void)unlockWithCodeEnabled:(BOOL)enabled 
-{
-    if (enabled) {
-        [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] unlockUIFromSource:1 withOptions:nil];
-    }
-    else
-    {
-        [self setPasscodeToggle:NO];
-        [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];
-    }
-}
-
-- (void)lockWithCodeEnabled:(BOOL)enabled
-{
-    [(SBUserAgent *)[objc_getClass("SBUserAgent") sharedUserAgent] lockAndDimDevice];
-    [self setPasscodeToggle:enabled];
-}
-
-- (void)togglePasscode {
-	self.isPasscodeOn = !self.isPasscodeOn;
-    
-    // This shows a banner notification to the user
-    // letting them know what status the passcode is in right now.
-
-	Class bulletinBannerController = objc_getClass("SBBulletinBannerController");
-	Class bulletinRequest = objc_getClass("BBBulletinRequest");
-    
-	if (bulletinBannerController && bulletinRequest) {
-		BBBulletinRequest *request = [[bulletinRequest alloc] init];
-		request.title = @"Password";
-		NSString *passcodeEnabledString;
-		if ([LibPass sharedInstance].isPasscodeOn)
-            passcodeEnabledString = @"enabled";
-		else
-            passcodeEnabledString = @"disabled";
-		request.message = [NSString stringWithFormat:@"Password now %@", passcodeEnabledString];
-		request.sectionID = @"com.bd452.libpass";
-		[(SBBulletinBannerController *)[bulletinBannerController sharedInstance] observer:nil addBulletin:request forFeed:2];
-		return;
-	}
-
-}
-
--(void)setPasscodeToggle:(BOOL)enabled
-{
-	self.isPasscodeOn = enabled;
-}
-
--(void)passwordWasEnteredHandler:(NSString *)password {
-    for (id delegate in delegates)
-    {
-        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(passwordWasEntered:)])
-        {
-            [delegate passwordWasEntered:password];
-        }
-    }
-}
-
-// This is used when unlocking the device and isPasscodeOn == YES to allow for 
-// multiple passcode to be used and the like.
-// This opens the door to a large variety of possibilities.
-- (BOOL) shouldAllowPasscode:(NSString*)passcode
-{
-    BOOL result = passcode == self.devicePasscode;;
-    
-    for (id delegate in delegates)
-    {
-        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(shouldAllowPasscode:)])
-        {
-            [delegate shouldAllowPasscode:passcode];
-        }
-    }
-
-    return result;
-}
-
-@end
-
-// *****************************************************************************
-// SpringBoard hooks start here
-// *****************************************************************************
 
 %hook SBLockScreenViewControllerBase
 - (void)_transitionWallpaperFromLock {
@@ -144,26 +26,10 @@
 %end
 
 %hook SBLockScreenManager
-- (BOOL)attemptUnlockWithPasscode:(id)fp8
-{
-    // This may all be redundant (see [SBDeviceLockController attemptDeviceUnlockWithPassword:appRequested:])
-    /*
-	[[LibPass sharedInstance] passwordWasEnteredHandler:fp8];
-
-	if ([LibPass sharedInstance].isPasscodeOn == NO)
-    {
-		return 	%orig([LibPass sharedInstance].devicePasscode);
-	}
-    */
-
-    return %orig;
-}
-
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
 	[[LibPass sharedInstance] setPasscodeToggle:YES];
 	%orig;
 }
-
 %end
 
 %hook SBDeviceLockController
@@ -181,8 +47,11 @@
             // if the entered passcode is the correct TP passcode. LibPassword will then perform a %orig using the system 
             // passcode (which should be granted access), not always bypassing the passcode but allowing for 
             // more than passcode to be "correct"
-            
             result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+            
+            // We already know it isn't the correct device passcode.
+            // Not returning here would cause many further problems.
+            return result;
         }
     }
     else

@@ -7,8 +7,10 @@ THEOS_PACKAGE_DIR_NAME = debs
 include theos/makefiles/common.mk
 
 TWEAK_NAME = libPass
-libPass_FILES = Tweak.xm
+libPass_FILES = Tweak.xm LibPass.m libPass_compat.m
 libPass_FRAMEWORKS = UIKit
 libPass_LIBRARIES = MobileGestalt
 
 include $(THEOS_MAKE_PATH)/tweak.mk
+#SUBPROJECTS += timecode
+include $(THEOS_MAKE_PATH)/aggregate.mk
