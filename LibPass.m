@@ -4,7 +4,7 @@
 #import <objc/runtime.h>
 #import <substrate.h>
 #import "NSData+AES.m"
-#define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libPass.plist"
+#define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libpass.plist"
 
 @implementation LibPass
 + (id) sharedInstance
