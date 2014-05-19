@@ -32,6 +32,9 @@
 - (void) lockWithCodeEnabled:(BOOL)enabled;
 // Returns whether the passcode is enabled/disabled
 - (BOOL) toggleValue;
+// For bypassing, etc
+-(BOOL) isPasscodeAvailable;
+-(NSString*)getEffectiveDevicePasscode;
 @end
 
 

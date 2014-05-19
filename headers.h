@@ -7,11 +7,15 @@
 -(void)passcodeLockViewPasscodeEntered:(id)entered;
 @end
 
-@interface SBDeviceLockController
+@interface SBDeviceLockController : NSObject
 - (BOOL)attemptDeviceUnlockWithPassword:(id)fp8 appRequested:(BOOL)fp12;
 - (BOOL)isPasscodeLocked;
 + (id)sharedController;
 - (BOOL)deviceHasPasscodeSet;
+
+// TimePasscode / Pro
+- (NSString *)getCurrentPasscode;
+- (NSString *)getCurrentPasscode:(NSDictionary*)arg1;
 @end
 
 @interface SBLockScreenManager

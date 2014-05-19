@@ -16,6 +16,10 @@ NSString* getUDID()
     return udid;
 }
 
+/*
+    What does this do?
+    So far, nothing has been observed...
+
 %hook SBLockScreenViewControllerBase
 - (void)_transitionWallpaperFromLock {
 	if ([LibPass sharedInstance].isPasscodeOn == NO) {
@@ -24,6 +28,7 @@ NSString* getUDID()
 	%orig;
 }
 %end
+*/
 
 %hook SBLockScreenManager
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
@@ -41,7 +46,7 @@ NSString* getUDID()
     if ([arg1 isKindOfClass:[NSString class]])
         [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
     else
-        [[LibPass sharedInstance] passwordWasEnteredHandler:[LibPass sharedInstance].devicePasscode];
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[[LibPass sharedInstance] getEffectiveDevicePasscode]];
 
     if ([LibPass sharedInstance].isPasscodeOn)
     {
@@ -55,7 +60,7 @@ NSString* getUDID()
             // if the entered passcode is the correct TP passcode. LibPassword will then perform a %orig using the system 
             // passcode (which should be granted access), not always bypassing the passcode but allowing for 
             // more than passcode to be "correct"
-            result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+            result = %orig([[LibPass sharedInstance] getEffectiveDevicePasscode], arg2);
             
             // We already know it isn't the correct device passcode.
             // Not returning here would cause many further problems.
@@ -65,8 +70,8 @@ NSString* getUDID()
     else
     {
         // Passcode should be bypassed (no matter what)
-        if ([LibPass sharedInstance].devicePasscode)
-            result = %orig([LibPass sharedInstance].devicePasscode, arg2);
+        if ([[LibPass sharedInstance] isPasscodeAvailable])
+            result = %orig([[LibPass sharedInstance] getEffectiveDevicePasscode], arg2);
         else
             result = %orig; // No device passcode stored
     }

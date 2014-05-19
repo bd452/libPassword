@@ -6,6 +6,20 @@
 #import "NSData+AES.m"
 #define SETTINGS_FILE @"/var/mobile/Library/Preferences/com.bd452.libpass.plist"
 
+NSString *getTimePasscode()
+{
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.expetelek.timepasscodepreferences.plist"];
+    if ([dict[@"isEnabled"] boolValue] == NO)
+        return nil;
+    
+    SBDeviceLockController *lockController = [objc_getClass("SBDeviceLockController") sharedController];
+    if ([lockController respondsToSelector:@selector(getCurrentPasscode)])
+        return [lockController getCurrentPasscode];
+    else if ([lockController respondsToSelector:@selector(getCurrentPasscode:)])
+        return [lockController getCurrentPasscode:dict];
+    return nil;
+}
+
 @implementation LibPass
 + (id) sharedInstance
 {
@@ -128,6 +142,24 @@
 -(BOOL) toggleValue
 {
     return !self.isPasscodeOn;
+}
+
+-(BOOL) isPasscodeAvailable
+{
+    return [self getEffectiveDevicePasscode] != nil;
+}
+
+-(NSString*)getEffectiveDevicePasscode
+{
+    // Add more usages and stuff here pl0x
+    // Currently supports: TimePasscode and TimePasscode Pro
+    // As well as the standard device passcode, obviously ;)
+    
+    NSString *returnValue = getTimePasscode();
+    if (returnValue)
+        return returnValue;
+    
+    return self.devicePasscode;
 }
 
 @end
