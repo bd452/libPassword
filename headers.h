@@ -3,6 +3,10 @@
 + (id)sharedUserAgent;
 @end
 
+@interface SBLockScreenViewController
+-(void)passcodeLockViewPasscodeEntered:(id)entered;
+@end
+
 @interface SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)fp8 appRequested:(BOOL)fp12;
 - (BOOL)isPasscodeLocked;
@@ -11,6 +15,7 @@
 @end
 
 @interface SBLockScreenManager
+@property(readonly, assign, nonatomic) SBLockScreenViewController/*Base*/* lockScreenViewController;
 - (BOOL)attemptUnlockWithPasscode:(id)fp8;
 - (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12;
 - (void)unlockUIFromSource:(int)fp8 withOptions:(id)fp12;

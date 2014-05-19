@@ -56,7 +56,8 @@
     else
     {
         [self setPasscodeToggle:NO];
-        [(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];
+        [(SBLockScreenViewController*)[[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewController] passcodeLockViewPasscodeEntered:nil];
+        //[(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];
     }
 }
 
@@ -99,7 +100,7 @@
 -(void)passwordWasEnteredHandler:(NSString *)password {
     for (id delegate in delegates)
     {
-        if (delegate && [delegate conformsToProtocol:@protocol(LibPassDelegate)] && [delegate respondsToSelector:@selector(passwordWasEntered:)])
+        if (delegate && [delegate respondsToSelector:@selector(passwordWasEntered:)])
         {
             [delegate passwordWasEntered:password];
         }
