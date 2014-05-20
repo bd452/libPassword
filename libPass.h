@@ -35,6 +35,8 @@
 // For bypassing, etc
 -(BOOL) isPasscodeAvailable;
 -(NSString*)getEffectiveDevicePasscode;
+
+-(void) deviceWasUnlockedHandler;
 @end
 
 

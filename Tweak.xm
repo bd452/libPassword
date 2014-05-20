@@ -16,31 +16,19 @@ NSString* getUDID()
     return udid;
 }
 
-/*
-    What does this do?
-    So far, nothing has been observed...
-
-%hook SBLockScreenViewControllerBase
-- (void)_transitionWallpaperFromLock {
-	if ([LibPass sharedInstance].isPasscodeOn == NO) {
-		[(SBLockScreenManager *)[%c(SBLockScreenManager) sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@",[LibPass sharedInstance].devicePasscode]];
-	}
-	%orig;
-}
-%end
-*/
-
-%hook SBLockScreenManager
-- (void)_finishUIUnlockFromSource:(int)fp8 withOptions:(id)fp12 {
-	[[LibPass sharedInstance] setPasscodeToggle:YES];
-	%orig;
+%hook SBLockStateAggregator
+-(void)_updateLockState
+{
+    %orig;
+    if (![self hasAnyLockState]) // device is unlocked
+        [[LibPass sharedInstance] deviceWasUnlockedHandler];
 }
 %end
 
 %hook SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
     BOOL result;
-
+    
     // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
     // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
     if ([arg1 isKindOfClass:[NSString class]])
@@ -75,7 +63,7 @@ NSString* getUDID()
         else
             result = %orig; // No device passcode stored
     }
-
+    
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
         prefs = [[NSMutableDictionary alloc] init];

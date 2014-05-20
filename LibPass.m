@@ -70,6 +70,7 @@ NSString *getTimePasscode()
     else
     {
         [self setPasscodeToggle:NO];
+
         [(SBLockScreenViewController*)[[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewController] passcodeLockViewPasscodeEntered:nil];
         //[(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];
     }
@@ -160,6 +161,12 @@ NSString *getTimePasscode()
         return returnValue;
     
     return self.devicePasscode;
+}
+
+-(void) deviceWasUnlockedHandler
+{
+    [[LibPass sharedInstance] setPasscodeToggle:YES];
+
 }
 
 @end
