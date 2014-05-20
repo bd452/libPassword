@@ -49,3 +49,10 @@
 -(BOOL)hasAnyLockState;
 -(unsigned)lockState;
 @end
+
+@interface SBUIPasscodeLockViewWithKeyboard
+- (id)passcode;
+@end
+
+
+

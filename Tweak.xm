@@ -25,16 +25,23 @@ NSString* getUDID()
 }
 %end
 
+%hook SBLockScreenViewController
+-(void)passcodeLockViewPasscodeEntered:(SBUIPasscodeLockViewWithKeyboard*)arg1
+{
+    NSLog(@"LibPass: passcodeLockViewPasscodeEntered %@", [arg1 passcode]);
+
+    if ([[arg1 passcode] isKindOfClass:[NSString class]])
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[arg1 passcode]];
+    else
+        [[LibPass sharedInstance] passwordWasEnteredHandler:[[LibPass sharedInstance] getEffectiveDevicePasscode]];
+
+    %orig;
+}
+%end
+
 %hook SBDeviceLockController
 - (BOOL)attemptDeviceUnlockWithPassword:(id)arg1 appRequested:(BOOL)arg2 {
     BOOL result;
-    
-    // We should possibly add result checks to make sure we aren't feeding anything an invalid password.
-    // Unless, of course, something wants the invalid password (e.g. a GuestMode type tweak)...
-    if ([arg1 isKindOfClass:[NSString class]])
-        [[LibPass sharedInstance] passwordWasEnteredHandler:arg1];
-    else
-        [[LibPass sharedInstance] passwordWasEnteredHandler:[[LibPass sharedInstance] getEffectiveDevicePasscode]];
 
     if ([LibPass sharedInstance].isPasscodeOn)
     {
