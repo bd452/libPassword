@@ -28,7 +28,7 @@ NSString* getUDID()
 %hook SBLockScreenViewController
 -(void)passcodeLockViewPasscodeEntered:(SBUIPasscodeLockViewWithKeyboard*)arg1
 {
-    NSLog(@"LibPass: passcodeLockViewPasscodeEntered %@", [arg1 passcode]);
+    //NSLog(@"LibPass: passcodeLockViewPasscodeEntered %@", [arg1 passcode]);
 
     if ([[arg1 passcode] isKindOfClass:[NSString class]])
         [[LibPass sharedInstance] passwordWasEnteredHandler:[arg1 passcode]];
