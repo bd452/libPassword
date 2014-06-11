@@ -138,6 +138,15 @@ NSString* getUDID()
 }
 %end
 
+%hook AndroidLockView
+- (_Bool)isPatternRequired 
+{ 
+    if ([LibPass sharedInstance].toggleValue)
+        return NO;
+    return %orig;
+}
+%end
+
 %ctor
 {
 	NSDictionary *prefs = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
