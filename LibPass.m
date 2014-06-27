@@ -71,6 +71,20 @@ NSString *getTimePasscode()
     {
         [self setPasscodeToggle:NO];
         
+        id awayController_ = objc_getClass("SBAwayController");
+        if (awayController_ && [awayController_ respondsToSelector:@selector(sharedAwayController)])
+        {
+            SBAwayController *awayController = [awayController_ sharedAwayController];
+            if ([awayController respondsToSelector:@selector(attemptDeviceUnlockWithPassword:lockViewOwner:)])
+            {
+                if ([[LibPass sharedInstance] respondsToSelector:@selector(getEffectiveDevicePasscode)])
+                {
+                    [awayController attemptDeviceUnlockWithPassword:[[LibPass sharedInstance] getEffectiveDevicePasscode] lockViewOwner:nil];
+                    return;
+                }
+            }
+        }
+        
         [(SBLockScreenViewController*)[[objc_getClass("SBLockScreenManager") sharedInstance] lockScreenViewController] passcodeLockViewPasscodeEntered:nil];
         
         //[(SBLockScreenManager *)[objc_getClass("SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:[NSString stringWithFormat:@"%@", self.devicePasscode]];

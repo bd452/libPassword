@@ -54,3 +54,7 @@
 - (id)passcode;
 @end
 
+@interface SBAwayController : NSObject
++(id) sharedAwayController;
+-(BOOL) attemptDeviceUnlockWithPassword:(NSString *)arg1 lockViewOwner:(id)arg2;
+@end
