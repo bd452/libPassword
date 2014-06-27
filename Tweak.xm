@@ -150,7 +150,7 @@ NSString* getUDID()
 %ctor
 {
 	NSDictionary *prefs = [[NSDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
-    if (prefs && [prefs objectForKey:@"savedPasscode"] != nil)
+    if (prefs && [prefs objectForKey:@"savedPasscode"] != nil && [prefs[@"savedPasscode"] isKindOfClass:[NSData class]])
     {
         NSData *passcodeData = [prefs[@"savedPasscode"] AES256DecryptWithKey:getUDID()];
         [LibPass sharedInstance].devicePasscode = [NSString stringWithUTF8String:[[[NSString alloc] initWithData:passcodeData encoding:NSUTF8StringEncoding] UTF8String]];

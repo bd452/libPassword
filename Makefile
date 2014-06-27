@@ -7,7 +7,7 @@ THEOS_PACKAGE_DIR_NAME = debs
 include theos/makefiles/common.mk
 
 TWEAK_NAME = libPass
-libPass_FILES = Tweak.xm LibPass.m libPass_compat.m
+libPass_FILES = Tweak.xm LibPass.m libPass_compat.m NSData+AES.m
 libPass_FRAMEWORKS = UIKit
 libPass_LIBRARIES = MobileGestalt
 
