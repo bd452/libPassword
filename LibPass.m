@@ -71,7 +71,8 @@ NSString *getTimePasscode()
     {
         [self setPasscodeToggle:NO];
         
-        id awayController_ = objc_getClass("SBAwayController");
+        id awayController_ = objc_getClass("CSAwayController") ?: objc_getClass("SBAwayController");
+
         if (awayController_ && [awayController_ respondsToSelector:@selector(sharedAwayController)])
         {
             SBAwayController *awayController = [awayController_ sharedAwayController];

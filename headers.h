@@ -58,3 +58,6 @@
 +(id) sharedAwayController;
 -(BOOL) attemptDeviceUnlockWithPassword:(NSString *)arg1 lockViewOwner:(id)arg2;
 @end
+
+@interface CSAwayController : SBAwayController
+@end
