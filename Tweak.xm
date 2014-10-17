@@ -70,6 +70,9 @@ NSString* getUDID()
         else
             result = %orig; // No device passcode stored
     }
+
+    if (([arg1 isEqual:@""] || arg1 == nil) && result)
+    	return result;
     
     NSMutableDictionary *prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:SETTINGS_FILE];
     if (!prefs)
